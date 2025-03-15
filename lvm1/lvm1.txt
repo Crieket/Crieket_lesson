@@ -1,0 +1,64 @@
+root@ubserv:~# lvmdiskscan
+  /dev/sda1 [      <1,05 GiB]
+  /dev/sda2 [       2,00 GiB]
+  /dev/sda3 [     <21,95 GiB] LVM physical volume
+  /dev/sdb  [       1,00 GiB]
+  /dev/sdc  [       1,00 GiB]
+  /dev/sdd  [       1,00 GiB]
+  /dev/sde  [       1,00 GiB]
+  /dev/sdf  [       1,00 GiB]
+  /dev/sdg  [       1,00 GiB]
+  /dev/sdh  [       5,00 GiB]
+  7 disks
+  2 partitions
+  0 LVM physical volume whole disks
+  1 LVM physical volume
+root@ubserv:~# lsblk
+NAME                      MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+sda                         8:0    0   25G  0 disk
+├─sda1                      8:1    0    1G  0 part /boot/efi
+├─sda2                      8:2    0    2G  0 part /boot
+└─sda3                      8:3    0 21,9G  0 part
+  └─ubuntu--vg-ubuntu--lv 252:0    0   11G  0 lvm  /
+sdb                         8:16   0    1G  0 disk
+sdc                         8:32   0    1G  0 disk
+sdd                         8:48   0    1G  0 disk
+sde                         8:64   0    1G  0 disk
+sdf                         8:80   0    1G  0 disk
+sdg                         8:96   0    1G  0 disk
+sdh                         8:112  0    5G  0 disk
+sr0                        11:0    1 1024M  0 rom
+root@ubserv:~# pvcreate /dev/sdh
+  Physical volume "/dev/sdh" successfully created.
+root@ubserv:~# vgcreate otus /dev/sdh
+  Volume group "otus" successfully created
+root@ubserv:~# lvcreate -l+70%FREE -n lesson otus
+  Logical volume "lesson" created.
+root@ubserv:~# vgs
+  VG        #PV #LV #SN Attr   VSize   VFree
+  otus        1   1   0 wz--n-  <5,00g  1,50g
+  ubuntu-vg   1   1   0 wz--n- <21,95g 10,97g
+
+root@ubserv:~# vgdisplay otus
+  --- Volume group ---
+  VG Name               otus
+  System ID
+  Format                lvm2
+  Metadata Areas        1
+  Metadata Sequence No  2
+  VG Access             read/write
+  VG Status             resizable
+  MAX LV                0
+  Cur LV                1
+  Open LV               0
+  Max PV                0
+  Cur PV                1
+  Act PV                1
+  VG Size               <5,00 GiB
+  PE Size               4,00 MiB
+  Total PE              1279
+  Alloc PE / Size       895 / <3,50 GiB
+  Free  PE / Size       384 / 1,50 GiB
+  VG UUID               GBo29c-mJDH-bZot-cIgy-4axP-QDtr-gu7qKS
+
+
