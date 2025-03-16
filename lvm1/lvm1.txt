@@ -61,4 +61,4 @@ root@ubserv:~# vgdisplay otus
   Free  PE / Size       384 / 1,50 GiB
   VG UUID               GBo29c-mJDH-bZot-cIgy-4axP-QDtr-gu7qKS
 
-
+zdfgsdffghfgh
