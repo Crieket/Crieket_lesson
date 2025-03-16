@@ -60,6 +60,152 @@ root@ubserv:~# vgdisplay otus
   Alloc PE / Size       895 / <3,50 GiB
   Free  PE / Size       384 / 1,50 GiB
   VG UUID               GBo29c-mJDH-bZot-cIgy-4axP-QDtr-gu7qKS
+root@ubserv:~# pvs
+  PV         VG        Fmt  Attr PSize   PFree
+  /dev/sda3  ubuntu-vg lvm2 a--  <21,95g  10,97g
+  /dev/sdh   otus      lvm2 a--   <5,00g 768,00m
+root@ubserv:~# pvcreate /dev/sdb
+  Physical volume "/dev/sdb" successfully created.
+root@ubserv:~# pvs
+  PV         VG        Fmt  Attr PSize   PFree
+  /dev/sda3  ubuntu-vg lvm2 a--  <21,95g  10,97g
+  /dev/sdb             lvm2 ---    1,00g   1,00g
+  /dev/sdh   otus      lvm2 a--   <5,00g 768,00m
 
-zdfgsdffghfgh
-11
+root@ubserv:~# vgextend otus /dev/sdb
+  Volume group "otus" successfully extended
+root@ubserv:~# vgs
+  VG        #PV #LV #SN Attr   VSize   VFree
+  otus        2   2   0 wz--n-   5,99g <1,75g
+  ubuntu-vg   1   1   0 wz--n- <21,95g 10,97g
+root@ubserv:~# vgdisplay otus -v | grep -i 'pv name'
+  PV Name               /dev/sdh
+  PV Name               /dev/sdb
+root@ubserv:~# mount  /dev/otus/lesson /mnt/otus/
+root@ubserv:~# mount  /dev/otus/test /mnt/otus/
+root@ubserv:~# lsblk
+NAME                      MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+sda                         8:0    0   25G  0 disk
+├─sda1                      8:1    0    1G  0 part /boot/efi
+├─sda2                      8:2    0    2G  0 part /boot
+└─sda3                      8:3    0 21,9G  0 part
+  └─ubuntu--vg-ubuntu--lv 252:0    0   11G  0 lvm  /
+sdb                         8:16   0    1G  0 disk
+sdc                         8:32   0    1G  0 disk
+sdd                         8:48   0    1G  0 disk
+sde                         8:64   0    1G  0 disk
+sdf                         8:80   0    1G  0 disk
+sdg                         8:96   0    1G  0 disk
+sdh                         8:112  0    5G  0 disk
+├─otus-lesson             252:1    0  3,5G  0 lvm  /mnt/otus
+└─otus-test               252:2    0  768M  0 lvm  /mnt/otus
+sr0                        11:0    1 1024M  0 rom
+root@ubserv:~# lvcreate -L200M -n mini otus
+  Logical volume "mini" created.
+root@ubserv:~# lvs
+  LV        VG        Attr       LSize   Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  lesson    otus      -wi-ao----  <3,50g
+  mini      otus      -wi-a----- 200,00m
+  test      otus      -wi-ao---- 768,00m
+  ubuntu-lv ubuntu-vg -wi-ao----  10,97g
+root@ubserv:~# mkfs.ext4 /dev/otus/mini
+mke2fs 1.47.0 (5-Feb-2023)
+Creating filesystem with 51200 4k blocks and 51200 inodes
+Filesystem UUID: 25019e1d-88f0-459c-8e3b-835f70b1a810
+Superblock backups stored on blocks:
+        32768
+
+Allocating group tables: done
+Writing inode tables: done
+Creating journal (4096 blocks): done
+Writing superblocks and filesystem accounting information: done
+
+root@ubserv:~# mount /dev/otus/mini /mnt/otus/
+root@ubserv:~# mount | grep mini
+/dev/mapper/otus-mini on /mnt/otus type ext4 (rw,relatime)
+root@ubserv:~# lsblk
+NAME                      MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+sda                         8:0    0   25G  0 disk
+├─sda1                      8:1    0    1G  0 part /boot/efi
+├─sda2                      8:2    0    2G  0 part /boot
+└─sda3                      8:3    0 21,9G  0 part
+  └─ubuntu--vg-ubuntu--lv 252:0    0   11G  0 lvm  /
+sdb                         8:16   0    1G  0 disk
+sdc                         8:32   0    1G  0 disk
+sdd                         8:48   0    1G  0 disk
+sde                         8:64   0    1G  0 disk
+sdf                         8:80   0    1G  0 disk
+sdg                         8:96   0    1G  0 disk
+sdh                         8:112  0    5G  0 disk
+├─otus-lesson             252:1    0  3,5G  0 lvm  /mnt/otus
+├─otus-test               252:2    0  768M  0 lvm  /mnt/otus
+└─otus-mini               252:3    0  200M  0 lvm  /mnt/otus
+sr0                        11:0    1 1024M  0 rom
+root@ubserv:~# dd if=/dev/zero of=/mnt/otus/test_otus.log bs=1M count=8000 status=progress
+dd: error writing '/mnt/otus/test_otus.log': No space left on device
+168+0 records in
+167+0 records out
+175382528 bytes (175 MB, 167 MiB) copied, 0,240578 s, 729 MB/s
+root@ubserv:~# df -hT /mnt/otus_mini/
+Filesystem            Type  Size  Used Avail Use% Mounted on
+/dev/mapper/otus-mini ext4  172M  168M     0 100% /mnt/otus_mini
+root@ubserv:~# lvextend -l+100%FREE /dev/otus/mini
+  Size of logical volume otus/mini changed from 200,00 MiB (50 extents) to <1,75 GiB (447 extents).
+  Logical volume otus/mini successfully resized.
+root@ubserv:~# df -hT /mnt/otus_mini/
+Filesystem            Type  Size  Used Avail Use% Mounted on
+/dev/mapper/otus-mini ext4  172M  168M     0 100% /mnt/otus_mini
+root@ubserv:~# resize2fs /dev/otus/mini
+resize2fs 1.47.0 (5-Feb-2023)
+Filesystem at /dev/otus/mini is mounted on /mnt/otus_mini; on-line resizing required
+old_desc_blocks = 1, new_desc_blocks = 1
+The filesystem on /dev/otus/mini is now 457728 (4k) blocks long.
+root@ubserv:~# df -hT /dev/otus/mini
+Filesystem            Type  Size  Used Avail Use% Mounted on
+/dev/mapper/otus-mini ext4  1,7G  168M  1,5G  11% /mnt/otus_mini
+root@ubserv:~# umount /mnt/otus_les
+root@ubserv:~# resize2fs /dev/otus/lesson
+resize2fs 1.47.0 (5-Feb-2023)
+Please run 'e2fsck -f /dev/otus/lesson' first.
+
+root@ubserv:~# e2f
+e2freefrag  e2fsck
+root@ubserv:~# e2fsck -fy /dev/otus/lesson
+e2fsck 1.47.0 (5-Feb-2023)
+Pass 1: Checking inodes, blocks, and sizes
+Pass 2: Checking directory structure
+Pass 3: Checking directory connectivity
+Pass 4: Checking reference counts
+Pass 5: Checking group summary information
+/dev/otus/lesson: 11/262144 files (0.0% non-contiguous), 36430/1048576 blocks
+root@ubserv:~# resize2fs /dev/otus/lesson 1G
+resize2fs 1.47.0 (5-Feb-2023)
+Resizing the filesystem on /dev/otus/lesson to 262144 (4k) blocks.
+The filesystem on /dev/otus/lesson is now 262144 (4k) blocks long.
+
+root@ubserv:~# lvre
+lvreduce  lvremove  lvrename  lvresize
+root@ubserv:~# lvreduce /dev/otus/lesson -L 1G
+  WARNING: Reducing active logical volume to 1,00 GiB.
+  THIS MAY DESTROY YOUR DATA (filesystem etc.)
+Do you really want to reduce otus/lesson? [y/n]: y
+  Size of logical volume otus/lesson changed from 4,00 GiB (1024 extents) to 1,00 GiB (256 extents).
+  Logical volume otus/lesson successfully resized.
+root@ubserv:~# mount /dev/otus/lesson /mnt/otus_les/
+root@ubserv:~# lsblk
+NAME                      MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+sda                         8:0    0   25G  0 disk
+├─sda1                      8:1    0    1G  0 part /boot/efi
+├─sda2                      8:2    0    2G  0 part /boot
+└─sda3                      8:3    0 21,9G  0 part
+  └─ubuntu--vg-ubuntu--lv 252:0    0   11G  0 lvm  /
+sdb                         8:16   0    1G  0 disk
+sdc                         8:32   0    1G  0 disk
+sdd                         8:48   0    1G  0 disk
+sde                         8:64   0    1G  0 disk
+sdf                         8:80   0    1G  0 disk
+sdg                         8:96   0    1G  0 disk
+sdh                         8:112  0    5G  0 disk
+├─otus-lesson             252:1    0    1G  0 lvm  /mnt/otus_les
+├─otus-test               252:2    0  768M  0 lvm  /mnt/otus_test
+└─otus-mini               252:3    0  500M  0 lvm  /mnt/otus_mini
