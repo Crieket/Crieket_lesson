@@ -62,3 +62,4 @@ root@ubserv:~# vgdisplay otus
   VG UUID               GBo29c-mJDH-bZot-cIgy-4axP-QDtr-gu7qKS
 
 zdfgsdffghfgh
+11
