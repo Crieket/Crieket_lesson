@@ -1,0 +1,226 @@
+root@ubserv:/home/kas# zpool list
+no pools available
+root@ubserv:/home/kas# zpool create zfs_ot1 mirror
+invalid vdev specification: mirror requires at least 2 devices
+root@ubserv:/home/kas# lsblk
+NAME                      MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+sda                         8:0    0   25G  0 disk
+├─sda1                      8:1    0    1G  0 part /boot/efi
+├─sda2                      8:2    0    2G  0 part /boot
+└─sda3                      8:3    0 21,9G  0 part
+  └─ubuntu--vg-ubuntu--lv 252:0    0   11G  0 lvm  /
+sdb                         8:16   0    1G  0 disk
+sdc                         8:32   0    1G  0 disk
+sdd                         8:48   0    1G  0 disk
+sde                         8:64   0    1G  0 disk
+sdf                         8:80   0    1G  0 disk
+sdg                         8:96   0    1G  0 disk
+sdh                         8:112  0    1G  0 disk
+sdi                         8:128  0    1G  0 disk
+sr0                        11:0    1 1024M  0 rom
+root@ubserv:/home/kas# zpool create zfs_ot1 mirror /dev/sdb /dev/sdc
+Defaulting to 4K blocksize (ashift=12) for '/dev/sdb'
+Defaulting to 4K blocksize (ashift=12) for '/dev/sdc'
+root@ubserv:/home/kas# zpool create zfs_ot2 mirror /dev/sdf /dev/sdg
+Defaulting to 4K blocksize (ashift=12) for '/dev/sdf'
+Defaulting to 4K blocksize (ashift=12) for '/dev/sdg'
+root@ubserv:/home/kas# zpool create zfs_ot3 mirror /dev/sdh /dev/sdi
+Defaulting to 4K blocksize (ashift=12) for '/dev/sdh'
+Defaulting to 4K blocksize (ashift=12) for '/dev/sdi'
+root@ubserv:/home/kas# zpool create zfs_ot1 mirror /dev/sdj /dev/sdk
+Defaulting to 4K blocksize (ashift=12) for '/dev/sdj'
+Defaulting to 4K blocksize (ashift=12) for '/dev/sdk'
+root@ubserv:/home/kas# zpool list
+NAME      SIZE  ALLOC   FREE    CAP  DEDUP  HEALTH  ALTROOT
+zfs_ot1  1016M   388K  1016M     0%  1.00x  ONLINE  -
+zfs_ot2  1016M   388K  1016M     0%  1.00x  ONLINE  -
+zfs_ot3  1016M   388K  1016M     0%  1.00x  ONLINE  -
+zfs_ot4  1016M   388K  1016M     0%  1.00x  ONLINE  -
+root@ubserv:/home/kas# zpool status
+  pool: zfs_ot1
+ state: ONLINE
+ scrub: none requested
+config:
+
+        NAME        STATE     READ WRITE CKSUM
+        zfs_ot1     ONLINE       0     0     0
+          mirror-0  ONLINE       0     0     0
+            sdb     ONLINE       0     0     0
+            sdc     ONLINE       0     0     0
+
+errors: No known data errors
+
+  pool: zfs_ot2
+ state: ONLINE
+ scrub: none requested
+config:
+
+        NAME        STATE     READ WRITE CKSUM
+        zfs_ot2     ONLINE       0     0     0
+          mirror-0  ONLINE       0     0     0
+            sdf     ONLINE       0     0     0
+            sdg     ONLINE       0     0     0
+
+errors: No known data errors
+
+  pool: zfs_ot3
+ state: ONLINE
+ scrub: none requested
+config:
+
+        NAME        STATE     READ WRITE CKSUM
+        zfs_ot3     ONLINE       0     0     0
+          mirror-0  ONLINE       0     0     0
+            sdh     ONLINE       0     0     0
+            sdi     ONLINE       0     0     0
+
+errors: No known data errors
+
+  pool: zfs_ot4
+ state: ONLINE
+ scrub: none requested
+config:
+
+        NAME        STATE     READ WRITE CKSUM
+        zfs_ot4     ONLINE       0     0     0
+          mirror-0  ONLINE       0     0     0
+            sdj     ONLINE       0     0     0
+            sdk     ONLINE       0     0     0
+
+errors: No known data errors
+
+root@ubserv:/home/kas# zfs get all | grep compression
+zfs_ot1  compression           off                        default
+zfs_ot2  compression           off                        default
+zfs_ot3  compression           off                        default
+root@ubserv:/home/kas# zfs set compression=lzjb zfs_ot1
+root@ubserv:/home/kas# zfs set compression=zle zfs_ot2
+root@ubserv:/home/kas# zfs set compression=gzip zfs_ot3
+root@ubserv:/home/kas# zfs set compression=gzip-9 zfs_ot4
+zfs
+root@ubserv:/home/kas# zfs get all | grep compression
+zfs_ot1  compression           lzjb                       local
+zfs_ot2  compression           zle                        local
+zfs_ot3  compression           gzip                       local
+zfs_ot4  compression           gzip-9                     local
+root@ubserv:/home/kas# zfs list
+NAME      USED  AVAIL  REFER  MOUNTPOINT
+zfs_ot1  22,4M   962M  22,1M  /zfs_ot1
+zfs_ot2  39,7M   944M  39,4M  /zfs_ot2
+zfs_ot3  11,8M   972M  11,5M  /zfs_ot3
+zfs_ot4  11,6M   972M  11,3M  /zfs_ot4
+root@ubserv:/home/kas# zfs get all | grep compressratio | grep -v ref
+zfs_ot1  compressratio         1.81x                      -
+zfs_ot2  compressratio         1.00x                      -
+zfs_ot3  compressratio         3.62x                      -
+zfs_ot4  compressratio         3.65x                      -
+root@ubserv:/home/kas#  wget -O archive.tar.gz --no-check-certificate 'https://drive.usercontent.google.com/download?id=1MvrcEp-WgAQe57aDEzxSRalPAwbNN1Bb&export=download'
+root@ubserv:/home/kas# tar -xzvf archive.tar.gz
+zpoolexport/
+zpoolexport/filea
+zpoolexport/fileb
+/home/kas# zpool status otus
+  pool: otus
+ state: ONLINE
+status: Some supported and requested features are not enabled on the pool.
+        The pool can still be used, but some features are unavailable.
+action: Enable all features using 'zpool upgrade'. Once this is done,
+        the pool may no longer be accessible by software that does not support
+        the features. See zpool-features(7) for details.
+config:
+
+        NAME                             STATE     READ WRITE CKSUM
+        otus                             ONLINE       0     0     0
+          mirror-0                       ONLINE       0     0     0
+            /home/kas/zpoolexport/filea  ONLINE       0     0     0
+            /home/kas/zpoolexport/fileb  ONLINE       0     0     0
+
+errors: No known data errors
+root@ubserv:/home/kas# zpool get all otus
+NAME  PROPERTY                       VALUE                          SOURCE
+otus  size                           480M                           -
+otus  capacity                       0%                             -
+otus  altroot                        -                              default
+otus  health                         ONLINE                         -
+otus  guid                           6554193320433390805            -
+otus  version                        -                              default
+otus  bootfs                         -                              default
+otus  delegation                     on                             default
+otus  autoreplace                    off                            default
+otus  cachefile                      -                              default
+otus  failmode                       wait                           default
+otus  listsnapshots                  off                            default
+otus  autoexpand                     off                            default
+otus  dedupratio                     1.00x                          -
+otus  free                           478M                           -
+otus  allocated                      2.09M                          -
+otus  readonly                       off                            -
+otus  ashift                         0                              default
+otus  comment                        -                              default
+otus  expandsize                     -                              -
+otus  freeing                        0                              -
+otus  fragmentation                  0%                             -
+otus  leaked                         0                              -
+otus  multihost                      off                            default
+otus  checkpoint                     -                              -
+otus  load_guid                      13419567341556733897           -
+otus  autotrim                       off                            default
+otus  compatibility                  off                            default
+otus  bcloneused                     0                              -
+otus  bclonesaved                    0                              -
+otus  bcloneratio                    1.00x                          -
+otus  feature@async_destroy          enabled                        local
+otus  feature@empty_bpobj            active                         local
+otus  feature@lz4_compress           active                         local
+otus  feature@multi_vdev_crash_dump  enabled                        local
+otus  feature@spacemap_histogram     active                         local
+otus  feature@enabled_txg            active                         local
+otus  feature@hole_birth             active                         local
+otus  feature@extensible_dataset     active                         local
+otus  feature@embedded_data          active                         local
+otus  feature@bookmarks              enabled                        local
+otus  feature@filesystem_limits      enabled                        local
+otus  feature@large_blocks           enabled                        local
+otus  feature@large_dnode            enabled                        local
+otus  feature@sha512                 enabled                        local
+otus  feature@skein                  enabled                        local
+otus  feature@edonr                  enabled                        local
+otus  feature@userobj_accounting     active                         local
+otus  feature@encryption             enabled                        local
+otus  feature@project_quota          active                         local
+otus  feature@device_removal         enabled                        local
+otus  feature@obsolete_counts        enabled                        local
+otus  feature@zpool_checkpoint       enabled                        local
+otus  feature@spacemap_v2            active                         local
+otus  feature@allocation_classes     enabled                        local
+otus  feature@resilver_defer         enabled                        local
+otus  feature@bookmark_v2            enabled                        local
+otus  feature@redaction_bookmarks    disabled                       local
+otus  feature@redacted_datasets      disabled                       local
+otus  feature@bookmark_written       disabled                       local
+otus  feature@log_spacemap           disabled                       local
+otus  feature@livelist               disabled                       local
+otus  feature@device_rebuild         disabled                       local
+otus  feature@zstd_compress          disabled                       local
+otus  feature@draid                  disabled                       local
+otus  feature@zilsaxattr             disabled                       local
+otus  feature@head_errlog            disabled                       local
+otus  feature@blake3                 disabled                       local
+otus  feature@block_cloning          disabled                       local
+root@ubserv:/home/kas# zfs get all | grep checksum
+otus            checksum              sha256                     local
+otus/hometask2  checksum              sha256                     inherited from otus
+root@ubserv:/home/kas# wget -O otus_task2.file --no-check-certificate https://drive.usercontent.google.com/download?id=1wgxjih8YZ-cqLqaZVa0lA3h3Y029c3oI&export=download
+[1] 4114
+root@ubserv:/home/kas#
+Redirecting output to ‘wget-log’.
+
+[1]+  Done                    wget -O otus_task2.file --no-check-certificate https://drive.usercontent.google.com/download?id=1wgxjih8YZ-cqLqaZVa0lA3h3Y029c3oI
+
+root@ubserv:/home/kas# zfs receive otus/test@today < otus_task2.file
+
+                
+root@ubserv:/home/kas# cat /otus/test/task1/file_mess/secret_message
+https://otus.ru/lessons/linux-hl/
+
+root@ubserv:/home/kas#
