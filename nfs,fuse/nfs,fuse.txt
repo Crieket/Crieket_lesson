@@ -1,0 +1,32 @@
+Server nfs	
+root@ubserv:~# showmount -a 10.0.2.5
+All mount points on ubserv:
+10.0.2.4:/media/nfs/upload
+root@ubserv:~# exportfs -s
+/media/nfs/upload  10.0.2.4(sync,wdelay,hide,no_subtree_check,sec=sys,rw,secure,root_squash,no_all_squash)
+/media/nfs/upload  10.0.2.15(async,wdelay,hide,no_subtree_check,sec=sys,ro,secure,no_root_squash,no_all_squash)
+root@ubserv:~# echo "Hello client" > /media/nfs/upload/test_client_wr
+
+root@ubserv:~# cat /media/nfs/upload/test_server_wr
+Hello server
+
+
+
+СLIENT nfs
+root@ubuntu1:~# mount 10.0.2.5:/media/nfs/upload /media/nfs
+var. 2 autofs
+root@ubuntu1:~# mount | grep autofs
+systemd-1 on /proc/sys/fs/binfmt_misc type autofs (rw,relatime,fd=32,pgrp=1,timeout=0,minproto=5,maxproto=5,direct,pipe_ino=5495)
+systemd-1 on /media/nfs type autofs (rw,relatime,fd=54,pgrp=1,timeout=0,minproto=5,maxproto=5,direct,pipe_ino=5665)
+root@ubuntu1:~# mount | grep vers=3
+10.0.2.5:/media/nfs/upload/ on /media/nfs type nfs (rw,relatime,vers=3,rsize=524288,wsize=524288,namlen=25  5,hard,proto=tcp,timeo=600,retrans=2,sec=sys,mountaddr=10.0.2.5,mountvers=3,mountport=54280,mountproto=udp  ,local_lock=none,addr=10.0.2.5)
+root@ubuntu1:~# cat /media/nfs/test_client_wr
+Hello client
+
+root@ubuntu1:~# echo "Hello server" > /media/nfs/test_server_wr
+
+root@ubuntu1:~# showmount -a 10.0.2.5
+All mount points on 10.0.2.5:
+10.0.2.4:/media/nfs/upload
+
+
