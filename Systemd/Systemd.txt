@@ -1,0 +1,206 @@
+root@ubserv:~# cat /etc/default/showlog
+#Config file for showlog
+
+WORD="ALERT"
+LOG=/var/log/showlog.log
+
+root@ubserv:~# cat /opt/showlog.sh
+#!/bin/bash
+
+WORD=$1
+LOG=$2
+DATE=`date`
+
+if grep $WORD $LOG &> /dev/null
+then
+        logger "$DATE: I found word, Master!"
+else
+        exit 0
+fi
+
+root@ubserv:~# systemctl cat showlog.service
+# /etc/systemd/system/showlog.service
+[Unit]
+Description= showlog service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/default/showlog
+ExecStart=/opt/showlog.sh $WORD $LOG
+root@ubserv:~# systemctl cat showlog.timer
+# /etc/systemd/system/showlog.timer
+[unit]
+Description=Run script showlog every 20 sec
+
+[Timer]
+#Run every 20 sec
+OnUnitActiveSec=20
+Unit=showlog.service
+
+[Install]
+WantedBy=multi-user.target
+root@ubserv:~# tail -n 100 /var/log/syslog | grep word
+2025-04-22T14:57:01.776704+03:00 ubserv root: Вт 22 апр 2025 14:57:01 MSK: I found word, Master!
+2025-04-22T14:58:11.900417+03:00 ubserv root: Вт 22 апр 2025 14:58:11 MSK: I found word, Master!
+2025-04-22T14:58:51.900053+03:00 ubserv root: Вт 22 апр 2025 14:58:51 MSK: I found word, Master!
+2025-04-22T15:00:01.904732+03:00 ubserv root: Вт 22 апр 2025 15:00:01 MSK: I found word, Master!
+2025-04-22T15:01:11.904596+03:00 ubserv root: Вт 22 апр 2025 15:01:11 MSK: I found word, Master!
+2025-04-22T15:02:07.988961+03:00 ubserv root: Вт 22 апр 2025 15:02:07 MSK: I found word, Master!
+2025-04-22T15:02:40.718898+03:00 ubserv root: Вт 22 апр 2025 15:02:40 MSK: I found word, Master!
+2025-04-22T15:03:02.473657+03:00 ubserv root: Вт 22 апр 2025 15:03:02 MSK: I found word, Master!
+2025-04-22T15:03:31.897578+03:00 ubserv root: Вт 22 апр 2025 15:03:31 MSK: I found word, Master!
+2025-04-22T15:04:11.901691+03:00 ubserv root: Вт 22 апр 2025 15:04:11 MSK: I found word, Master!
+2025-04-22T15:04:41.902836+03:00 ubserv root: Вт 22 апр 2025 15:04:41 MSK: I found word, Master!
+2025-04-22T15:05:11.904939+03:00 ubserv root: Вт 22 апр 2025 15:05:11 MSK: I found word, Master!
+2025-04-22T15:05:40.900410+03:00 ubserv root: Вт 22 апр 2025 15:05:40 MSK: I found word, Master!
+2025-04-22T15:06:04.205968+03:00 ubserv root: Вт 22 апр 2025 15:06:04 MSK: I found word, Master!
+2025-04-22T15:06:51.898086+03:00 ubserv root: Вт 22 апр 2025 15:06:51 MSK: I found word, Master!
+2025-04-22T15:08:01.901150+03:00 ubserv root: Вт 22 апр 2025 15:08:01 MSK: I found word, Master!
+2025-04-22T15:09:11.899393+03:00 ubserv root: Вт 22 апр 2025 15:09:11 MSK: I found word, Master!
+2025-04-22T15:09:42.742634+03:00 ubserv root: Вт 22 апр 2025 15:09:42 MSK: I found word, Master!
+
+
+
+root@ubserv:~# cat > /etc/spawn-fcgi/fcgi.conf
+bash: /etc/spawn-fcgi/fcgi.conf: No such file or directory
+root@ubserv:~# cat > /etc/spawn-fcgi/fcgi.con
+bash: /etc/spawn-fcgi/fcgi.con: No such file or directory
+root@ubserv:~# touch /etc/spawn-fcgi/fcgi.conf
+touch: cannot touch '/etc/spawn-fcgi/fcgi.conf': No such file or directory
+root@ubserv:~# mkdir /etc/spawn-fcgi
+root@ubserv:~# touch /etc/spawn-fcgi/fcgi.conf
+root@ubserv:~# cat /etc/spawn-fcgi/fcgi.conf
+root@ubserv:~# nano /etc/spawn-fcgi/fcgi.conf
+root@ubserv:~# touch /etc/systemd/system/spawn-fcgi.service
+root@ubserv:~# nano /etc/systemd/system/spawn-fcgi.service
+root@ubserv:~# systemctl start spawn-fcgi
+root@ubserv:~# systemctl statuds spawn-fcgi
+Unknown command verb 'statuds', did you mean 'status'?
+root@ubserv:~# systemctl status spawn-fcgi
+● spawn-fcgi.service - Spawn-fcgi startup service
+     Loaded: loaded (/etc/systemd/system/spawn-fcgi.service; disabled; preset: enabled)
+     Active: active (running) since Tue 2025-04-22 15:29:03 MSK; 14s ago
+   Main PID: 18649 (php-cgi)
+      Tasks: 33 (limit: 4589)
+     Memory: 14.6M (peak: 14.8M)
+        CPU: 17ms
+     CGroup: /system.slice/spawn-fcgi.service
+             ├─18649 /usr/bin/php-cgi
+             ├─18653 /usr/bin/php-cgi
+             ├─18654 /usr/bin/php-cgi
+             ├─18655 /usr/bin/php-cgi
+             ├─18656 /usr/bin/php-cgi
+             ├─18657 /usr/bin/php-cgi
+             ├─18658 /usr/bin/php-cgi
+             ├─18659 /usr/bin/php-cgi
+             ├─18660 /usr/bin/php-cgi
+             ├─18661 /usr/bin/php-cgi
+             ├─18662 /usr/bin/php-cgi
+             ├─18663 /usr/bin/php-cgi
+             ├─18664 /usr/bin/php-cgi
+             ├─18665 /usr/bin/php-cgi
+             ├─18666 /usr/bin/php-cgi
+             ├─18667 /usr/bin/php-cgi
+             ├─18668 /usr/bin/php-cgi
+             ├─18669 /usr/bin/php-cgi
+             ├─18670 /usr/bin/php-cgi
+             ├─18671 /usr/bin/php-cgi
+             ├─18672 /usr/bin/php-cgi
+             ├─18673 /usr/bin/php-cgi
+             ├─18674 /usr/bin/php-cgi
+             ├─18675 /usr/bin/php-cgi
+             ├─18676 /usr/bin/php-cgi
+             ├─18677 /usr/bin/php-cgi
+             ├─18678 /usr/bin/php-cgi
+             ├─18679 /usr/bin/php-cgi
+             ├─18680 /usr/bin/php-cgi
+             ├─18681 /usr/bin/php-cgi
+             ├─18682 /usr/bin/php-cgi
+             ├─18683 /usr/bin/php-cgi
+             └─18684 /usr/bin/php-cgi
+
+апр 22 15:29:03 ubserv systemd[1]: Started spawn-fcgi.service - Spawn-fcgi startup service.
+
+root@ubserv:~#nano /etc/systemd/system/nginx@.service
+
+[Unit]
+Description=my service nginx first - seconds
+
+After=network.target nss-lookup.target
+
+[Service]
+Type=forking
+PIDFile=/run/nginx-%I.pid
+ExecStartPre=/usr/sbin/nginx -t -c /etc/nginx/nginx-%I.conf -q -g 'daemon on; master_process on;'
+ExecStart=/usr/sbin/nginx -c /etc/nginx/nginx-%I.conf -g 'daemon on; master_process on;'
+ExecReload=/usr/sbin/nginx -c /etc/nginx/nginx-%I.conf -g 'daemon on; master_process on;' -s reload
+ExecStop=-/sbin/start-stop-daemon --quiet --stop --retry QUIT/5 --pidfile /run/nginx-%I.pid
+TimeoutStopSec=5
+KillMode=mixed
+
+[Install]
+WantedBy=multi-user.target
+
+
+root@ubserv:~# systemctl start nginx@first
+root@ubserv:~# systemctl status nginx@first
+● nginx@first.service - A high performance web server and a reverse proxy server
+     Loaded: loaded (/etc/systemd/system/nginx@.service; disabled; preset: enabled)
+     Active: active (running) since Tue 2025-04-22 16:32:18 MSK; 1min 17s ago
+       Docs: man:nginx(8)
+    Process: 1421 ExecStartPre=/usr/sbin/nginx -t -c /etc/nginx/nginx-first.conf -q -g daemon on; master_process on; (code=exited, status=0/SUCCESS)
+    Process: 1423 ExecStart=/usr/sbin/nginx -c /etc/nginx/nginx-first.conf -g daemon on; master_process on; (code=exited, status=0/SUCCESS)
+   Main PID: 1424 (nginx)
+      Tasks: 5 (limit: 4589)
+     Memory: 3.7M (peak: 4.2M)
+        CPU: 19ms
+     CGroup: /system.slice/system-nginx.slice/nginx@first.service
+             ├─1424 "nginx: master process /usr/sbin/nginx -c /etc/nginx/nginx-first.conf -g daemon on; master_process on;"
+             ├─1425 "nginx: worker process"
+             ├─1426 "nginx: worker process"
+             ├─1427 "nginx: worker process"
+             └─1428 "nginx: worker process"
+
+апр 22 16:32:18 ubserv systemd[1]: Starting nginx@first.service - A high performance web server and a reverse proxy server...
+апр 22 16:32:18 ubserv systemd[1]: Started nginx@first.service - A high performance web server and a reverse proxy server.
+root@ubserv:~# systemctl status nginx@second
+● nginx@second.service - A high performance web server and a reverse proxy server
+     Loaded: loaded (/etc/systemd/system/nginx@.service; disabled; preset: enabled)
+     Active: active (running) since Tue 2025-04-22 16:35:07 MSK; 3s ago
+       Docs: man:nginx(8)
+    Process: 1490 ExecStartPre=/usr/sbin/nginx -t -c /etc/nginx/nginx-second.conf -q -g daemon on; master_process on; (code=exited, status=0/SUCCESS)
+    Process: 1491 ExecStart=/usr/sbin/nginx -c /etc/nginx/nginx-second.conf -g daemon on; master_process on; (code=exited, status=0/SUCCESS)
+   Main PID: 1493 (nginx)
+      Tasks: 5 (limit: 4589)
+     Memory: 3.7M (peak: 4.3M)
+        CPU: 19ms
+     CGroup: /system.slice/system-nginx.slice/nginx@second.service
+             ├─1493 "nginx: master process /usr/sbin/nginx -c /etc/nginx/nginx-second.conf -g daemon on; master_process on;"
+             ├─1494 "nginx: worker process"
+             ├─1495 "nginx: worker process"
+             ├─1496 "nginx: worker process"
+             └─1497 "nginx: worker process"
+
+апр 22 16:35:07 ubserv systemd[1]: Starting nginx@second.service - A high performance web server and a reverse proxy server...
+апр 22 16:35:07 ubserv systemd[1]: Started nginx@second.service - A high performance web server and a reverse proxy server.
+tcp    LISTEN  0       511               0.0.0.0:9001           0.0.0.0:*      users:(("nginx",pid=1428,fd=5),("nginx",pid=1427,fd=5),("nginx",pid=1426,fd=5),("nginx",pid=1425,fd=5),("nginx",pid=1424,fd=5))
+tcp    LISTEN  0       511               0.0.0.0:9002           0.0.0.0:*      users:(("nginx",pid=1497,fd=5),("nginx",pid=1496,fd=5),("nginx",pid=1495,fd=5),("nginx",pid=1494,fd=5),("nginx",pid=1493,fd=5))
+root@ubserv:~# ps afx | grep nginx
+   1519 pts/1    S+     0:00                          \_ grep --color=auto nginx
+   1334 ?        Ss     0:00 nginx: master process /usr/sbin/nginx -g daemon on; master_process on;
+   1335 ?        S      0:00  \_ nginx: worker process
+   1336 ?        S      0:00  \_ nginx: worker process
+   1337 ?        S      0:00  \_ nginx: worker process
+   1338 ?        S      0:00  \_ nginx: worker process
+   1424 ?        Ss     0:00 nginx: master process /usr/sbin/nginx -c /etc/nginx/nginx-first.conf -g daemon on; master_process on;
+   1425 ?        S      0:00  \_ nginx: worker process
+   1426 ?        S      0:00  \_ nginx: worker process
+   1427 ?        S      0:00  \_ nginx: worker process
+   1428 ?        S      0:00  \_ nginx: worker process
+   1493 ?        Ss     0:00 nginx: master process /usr/sbin/nginx -c /etc/nginx/nginx-second.conf -g daemon on; master_process on;
+   1494 ?        S      0:00  \_ nginx: worker process
+   1495 ?        S      0:00  \_ nginx: worker process
+   1496 ?        S      0:00  \_ nginx: worker process
+   1497 ?        S      0:00  \_ nginx: worker process
+
+
