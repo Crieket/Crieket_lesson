@@ -1,0 +1,19 @@
+ENV['VAGRANT_SERVER_URL'] = 'https://vagrant.elab.pro'
+Vagrant.configure(2) do |config|
+   config.vm.define "vm-1" do |srv|
+	srv.vm.box = "centos/7"
+	srv.vm.synced_folder "/home/kas/Vagrantdir", "/home/vagrant" 
+	srv.vm.hostname = "cent7"
+	srv.vm.network(:private_network, type: "dhcp")
+	srv.vm.provider "virtualbox" do |vb|
+		vb.memory = "2048"
+		vb.cpus = "1"
+	srv.vm.provision "shell", inline: <<-SHELL
+		hostnamectl 
+		uname -a 
+		free -m 
+	SHELL
+		end
+	end
+end
+		
