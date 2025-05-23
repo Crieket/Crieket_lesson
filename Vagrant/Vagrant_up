@@ -1,91 +1,117 @@
-kas@ivc4-m3:~/Vagrantdir$ vagrant up vm-1 
-Bringing machine 'vm-1' up with 'virtualbox' provider...
-==> vm-1: Importing base box 'centos/7'...
-==> vm-1: Matching MAC address for NAT networking...
-==> vm-1: Checking if box 'centos/7' version '1.0.0' is up to date...
-==> vm-1: Setting the name of the VM: Vagrantdir_vm-1_1747330393548_7552
-==> vm-1: Clearing any previously set network interfaces...
-==> vm-1: Preparing network interfaces based on configuration...
-    vm-1: Adapter 1: nat
-    vm-1: Adapter 2: hostonly
-==> vm-1: Forwarding ports...
-    vm-1: 22 (guest) => 2222 (host) (adapter 1)
-==> vm-1: Running 'pre-boot' VM customizations...
-==> vm-1: Booting VM...
-==> vm-1: Waiting for machine to boot. This may take a few minutes...
-    vm-1: SSH address: 127.0.0.1:2222
-    vm-1: SSH username: vagrant
-    vm-1: SSH auth method: private key
-    vm-1: 
-    vm-1: Vagrant insecure key detected. Vagrant will automatically replace
-    vm-1: this with a newly generated keypair for better security.
-    vm-1: 
-    vm-1: Inserting generated public key within guest...
-    vm-1: Removing insecure key from the guest if it's present...
-    vm-1: Key inserted! Disconnecting and reconnecting using new SSH key...
-==> vm-1: Machine booted and ready!
-==> vm-1: Checking for guest additions in VM...
-    vm-1: No guest additions were detected on the base box for this VM! Guest
-    vm-1: additions are required for forwarded ports, shared folders, host only
-    vm-1: networking, and more. If SSH fails on this machine, please install
-    vm-1: the guest additions and repackage the box to continue.
-    vm-1: 
-    vm-1: This is not an error message; everything may continue to work properly,
-    vm-1: in which case you may ignore this message.
-==> vm-1: Setting hostname...
-==> vm-1: Configuring and enabling network interfaces...
-==> vm-1: Rsyncing folder: /home/kas/Vagrantdir/ => /vagrant
-==> vm-1: Mounting shared folders...
+C:\Users\Anton\Vagrant>vagrant reload
+==> vm-2: Checking if box 'centos/8' version '1.0.0' is up to date...
+==> vm-2: Clearing any previously set forwarded ports...
+==> vm-2: Fixed port collision for 22 => 2222. Now on port 2200.
+==> vm-2: Clearing any previously set network interfaces...
+==> vm-2: Preparing network interfaces based on configuration...
+    vm-2: Adapter 1: nat
+    vm-2: Adapter 2: hostonly
+==> vm-2: Forwarding ports...
+    vm-2: 22 (guest) => 2200 (host) (adapter 1)
+==> vm-2: Running 'pre-boot' VM customizations...
+==> vm-2: Booting VM...
+==> vm-2: Waiting for machine to boot. This may take a few minutes...
+    vm-2: SSH address: 127.0.0.1:2200
+    vm-2: SSH username: vagrant
+    vm-2: SSH auth method: private key
+==> vm-2: Machine booted and ready!
+==> vm-2: Checking for guest additions in VM...
+    vm-2: No guest additions were detected on the base box for this VM! Guest
+    vm-2: additions are required for forwarded ports, shared folders, host only
+    vm-2: networking, and more. If SSH fails on this machine, please install
+    vm-2: the guest additions and repackage the box to continue.
+    vm-2:
+    vm-2: This is not an error message; everything may continue to work properly,
+    vm-2: in which case you may ignore this message.
+==> vm-2: Setting hostname...
+==> vm-2: Configuring and enabling network interfaces...
+==> vm-2: Rsyncing folder: /cygdrive/c/Users/Anton/Vagrant/ => /vagrant
+==> vm-2: Mounting shared folders...
+    vm-2: C:/Users/Anton/Vagrant => /home/vagrant
+Vagrant was unable to mount VirtualBox shared folders. This is usually
+because the filesystem "vboxsf" is not available. This filesystem is
+made available via the VirtualBox Guest Additions and kernel module.
+Please verify that these guest additions are properly installed in the
+guest. This is not a bug in Vagrant and is usually caused by a faulty
+Vagrant box. For context, the command attempted was:
 
-kas@ivc4-m3:~/Vagrantdir$ vagrant up vm-1 
-Bringing machine 'vm-1' up with 'virtualbox' provider...
-==> vm-1: Checking if box 'centos/7' version '1.0.0' is up to date...
-==> vm-1: Running provisioner: shell...
-    vm-1: Running: inline script
-    vm-1:    Static hostname: cent7
-    vm-1:          Icon name: computer-vm
-    vm-1:            Chassis: vm
-    vm-1:         Machine ID: 1d0837d598feba4bbae2c8e931736d5a
-    vm-1:            Boot ID: f97fe64ba40341d69f1ab302f791f345
-    vm-1:     Virtualization: kvm
-    vm-1:   Operating System: CentOS Linux 7 (Core)
-    vm-1:        CPE OS Name: cpe:/o:centos:centos:7
-    vm-1:             Kernel: Linux 3.10.0-1127.el7.x86_64
-    vm-1:       Architecture: x86-64
-    vm-1: Linux cent7 3.10.0-1127.el7.x86_64 #1 SMP Tue Mar 31 23:36:51 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux
-    vm-1:               total        used        free      shared  buff/cache   available
-    vm-1: Mem:           1837          99        1623           8         114        1603
-    vm-1: Swap:          2047           0        2047
-==> vm-1: Running provisioner: shell...
-    vm-1: Running: inline script
-    vm-1:    Static hostname: cent7
-    vm-1:          Icon name: computer-vm
-    vm-1:            Chassis: vm
-    vm-1:         Machine ID: 1d0837d598feba4bbae2c8e931736d5a
-    vm-1:            Boot ID: f97fe64ba40341d69f1ab302f791f345
-    vm-1:     Virtualization: kvm
-    vm-1:   Operating System: CentOS Linux 7 (Core)
-    vm-1:        CPE OS Name: cpe:/o:centos:centos:7
-    vm-1:             Kernel: Linux 3.10.0-1127.el7.x86_64
-    vm-1:       Architecture: x86-64
-    vm-1: Linux cent7 3.10.0-1127.el7.x86_64 #1 SMP Tue Mar 31 23:36:51 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux
-    vm-1:               total        used        free      shared  buff/cache   available
-    vm-1: Mem:           1837          99        1623           8         114        1603
-    vm-1: Swap:          2047           0        2047
-==> vm-1: Running provisioner: shell...
-    vm-1: Running: inline script
-    vm-1:    Static hostname: cent7
-    vm-1:          Icon name: computer-vm
-    vm-1:            Chassis: vm
-    vm-1:         Machine ID: 1d0837d598feba4bbae2c8e931736d5a
-    vm-1:            Boot ID: f97fe64ba40341d69f1ab302f791f345
-    vm-1:     Virtualization: kvm
-    vm-1:   Operating System: CentOS Linux 7 (Core)
-    vm-1:        CPE OS Name: cpe:/o:centos:centos:7
-    vm-1:             Kernel: Linux 3.10.0-1127.el7.x86_64
-    vm-1:       Architecture: x86-64
-    vm-1: Linux cent7 3.10.0-1127.el7.x86_64 #1 SMP Tue Mar 31 23:36:51 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux
-    vm-1:               total        used        free      shared  buff/cache   available
-    vm-1: Mem:           1837          99        1623           8         114        1603
-    vm-1: Swap:          2047           0        2047
+mount -t vboxsf -o uid=1000,gid=1000,_netdev home_vagrant /home/vagrant
 
+The error output from the command was:
+
+mount: /home/vagrant: unknown filesystem type 'vboxsf'.
+
+C:\Users\Anton\Vagrant>Vagrant global-status
+id       name   provider   state   directory
+-----------------------------------------------------------------------
+3f5eda6  vm-2   virtualbox running C:/Users/Anton/Vagrant
+
+The above shows information about all known Vagrant environments
+on this machine. This data is cached and may not be completely
+up-to-date (use "vagrant global-status --prune" to prune invalid
+entries). To interact with any of the machines, you can go to that
+directory and run Vagrant, or you can use the ID directly with
+Vagrant commands from any directory. For example:
+"vagrant destroy 1a2b3c4d"
+
+C:\Users\Anton\Vagrant>vagrant ssh vm-2
+[vagrant@centos8 ~]$ sudo-i
+-bash: sudo-i: command not found
+[vagrant@centos8 ~]$ sudo -i
+[root@centos8 ~]# logout
+[vagrant@centos8 ~]$ ^C
+[vagrant@centos8 ~]$ ^C
+[vagrant@centos8 ~]$ logout
+Connection to 127.0.0.1 closed.
+
+C:\Users\Anton\Vagrant>Vagrant up vm-2
+Bringing machine 'vm-2' up with 'virtualbox' provider...
+==> vm-2: Checking if box 'centos/8' version '1.0.0' is up to date...
+==> vm-2: Running provisioner: shell...
+    vm-2: Running: inline script
+    vm-2:    Static hostname: centos8
+    vm-2:          Icon name: computer-vm
+    vm-2:            Chassis: vm
+    vm-2:         Machine ID: 3164cbea1223430d8c12fc6d055de074
+    vm-2:            Boot ID: c5823c2ddb2344ecbcc5f14870a231f7
+    vm-2:     Virtualization: oracle
+    vm-2:   Operating System: CentOS Linux 8
+    vm-2:        CPE OS Name: cpe:/o:centos:centos:8
+    vm-2:             Kernel: Linux 4.18.0-240.1.1.el8_3.x86_64
+    vm-2:       Architecture: x86-64
+    vm-2: Linux centos8 4.18.0-240.1.1.el8_3.x86_64 #1 SMP Thu Nov 19 17:20:08 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux
+    vm-2:               total        used        free      shared  buff/cache   available
+    vm-2: Mem:           1976         137        1666          16         172        1681
+    vm-2: Swap:          2047           0        2047
+==> vm-2: Running provisioner: shell...
+    vm-2: Running: inline script
+    vm-2:    Static hostname: centos8
+    vm-2:          Icon name: computer-vm
+    vm-2:            Chassis: vm
+    vm-2:         Machine ID: 3164cbea1223430d8c12fc6d055de074
+    vm-2:            Boot ID: c5823c2ddb2344ecbcc5f14870a231f7
+    vm-2:     Virtualization: oracle
+    vm-2:   Operating System: CentOS Linux 8
+    vm-2:        CPE OS Name: cpe:/o:centos:centos:8
+    vm-2:             Kernel: Linux 4.18.0-240.1.1.el8_3.x86_64
+    vm-2:       Architecture: x86-64
+    vm-2: Linux centos8 4.18.0-240.1.1.el8_3.x86_64 #1 SMP Thu Nov 19 17:20:08 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux
+    vm-2:               total        used        free      shared  buff/cache   available
+    vm-2: Mem:           1976         137        1666          16         172        1681
+    vm-2: Swap:          2047           0        2047
+==> vm-2: Running provisioner: shell...
+    vm-2: Running: inline script
+    vm-2:    Static hostname: centos8
+    vm-2:          Icon name: computer-vm
+    vm-2:            Chassis: vm
+    vm-2:         Machine ID: 3164cbea1223430d8c12fc6d055de074
+    vm-2:            Boot ID: c5823c2ddb2344ecbcc5f14870a231f7
+    vm-2:     Virtualization: oracle
+    vm-2:   Operating System: CentOS Linux 8
+    vm-2:        CPE OS Name: cpe:/o:centos:centos:8
+    vm-2:             Kernel: Linux 4.18.0-240.1.1.el8_3.x86_64
+    vm-2:       Architecture: x86-64
+    vm-2: Linux centos8 4.18.0-240.1.1.el8_3.x86_64 #1 SMP Thu Nov 19 17:20:08 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux
+    vm-2:               total        used        free      shared  buff/cache   available
+    vm-2: Mem:           1976         137        1666          16         172        1681
+    vm-2: Swap:          2047           0        2047
