@@ -2,13 +2,13 @@
 
 Установите Docker на хост машину
 
-kas@Home:~/Рабочий стол/Crieket_lesson/Docker$ vagrant status
-Current machine states:
-Host машина на Vagrant ubuntu 22
-docker                    running (virtualbox)
+    kas@Home:~/Рабочий стол/Crieket_lesson/Docker$ vagrant status
+    Current machine states:
+    Host машина на Vagrant ubuntu 22
+    docker                    running (virtualbox)
 
-root@docker:/vagrant# docker -v
-Docker version 28.1.1, build 4eba377
+    root@docker:/vagrant# docker -v
+    Docker version 28.1.1, build 4eba377
 
 Установите Docker Compose - как плагин, или как отдельное приложение
 
