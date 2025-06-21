@@ -1,0 +1,84 @@
+---
+
+- name: NGINX | install web server and configure NGINX
+  hosts: web
+  become: true
+  vars:
+    nginx_listen_port: 80
+    log_srv: 192.168.56.15:514
+
+  tasks:
+  - name: update
+    apt:
+      update_cache: True
+    tags:
+      - update apt
+
+  - name: NGINX Install NGINX
+    apt:
+      name: nginx
+      state: latest
+    tags:
+      - nginx-package
+  
+  - name: NGINX rsyslog conf
+    template:
+      src: /home/kas/Рабочий стол/Crieket_lesson/LOGs/template/rsyslog.conf.j2
+      dest: /etc/rsyslog.d/10-audit.conf
+
+  - name: NGINX install_rsysloog_audits
+    apt:
+      update_cache: True
+      name: 
+        - auditd
+        - rsyslog
+    tags:
+      - auditd-package
+    notify: add auditd
+
+  - name: NGINX | Create config
+    template:
+      src: /home/kas/Рабочий стол/Crieket_lesson/LOGs/template/nginx.conf.j2
+      dest: /etc/nginx/nginx.conf
+    notify:
+      - reload nginx
+    tags:
+      - nginx-configuration
+  handlers:
+    - name: restart nginx
+      systemd:
+        name: nginx
+        state: restarted
+        enabled: yes
+
+    - name: reload nginx
+      systemd:
+        name: nginx
+        state: reloaded
+    - name: add auditd
+      shell: auditctl -w /etc/nginx/nginx.conf -p aw -k nginx_audit
+
+- name: LOG
+  hosts: log
+  become: true
+  
+  tasks:
+  - name: Update cache and install rsyslog
+    apt:
+      update_cache: True
+      name: rsyslog
+
+  - name: open imtcp
+    shell: 'echo "module(load=\"imtcp\")\ninput(type=\"imtcp\" port=\"514\")" >> /etc/rsyslog.conf'
+    tags:
+        - open tcp
+  - name: add rsyslog
+    shell: 'echo "\$template RemoteLogs, \"/var/log/rsyslog/%HOSTNAME%/%PROGRAMNAME%.log\"\n*.* ?RemoteLogs\n& ~" >> /etc/rsyslog.conf'
+    tags:
+        - rsyslog
+  - name: restart_rsyslog
+    systemd:
+      name: rsyslog
+      state: restarted
+
+
