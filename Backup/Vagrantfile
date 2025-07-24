@@ -2,18 +2,23 @@ ENV['VAGRANT_SERVER_URL'] = 'https://vagrant.elab.pro'
 
 MACHINES = {
     :backup => {
-            :box_name => "ubuntu/22.04",
-            :ip_addr => '192.168.56.10',
-            :memory => 2048,
-            :cpus => 2,
-    },
-    :client => {
         :box_name => "ubuntu/22.04",
-        :ip_addr => '192.168.56.15',
+        :ip_addr => '192.168.56.10',
         :memory => 2048,
         :cpus => 2,
+        :disk  => {
+          :sata1 => {
+            :dfile => './disk1.vdi',
+            :size => 2048,
+            :port => 2
+            }        
+        }
     }
 }
+   
+
+
+
 Vagrant.configure("2") do |config|
     MACHINES.each do |boxname, boxconfig|
         config.vm.define boxname do |box|
@@ -21,16 +26,28 @@ Vagrant.configure("2") do |config|
             box.vm.host_name = boxname.to_s
             box.vm.network "private_network", ip: boxconfig[:ip_addr]
             box.vm.provider :virtualbox do |vm|
-             vm.memory = boxconfig[:memory]
-             vm.cpus = boxconfig[:cpus]
+              needsController = false
+              boxconfig[:disk].each do |dname, dconf|
+              unless File.exist?(dconf[:dfile])
+                vm.customize ['createhd', '--filename', dconf[:dfile], '--variant', 'Fixed', '--size', dconf[:size]]
+                needsController =  true
+              end
             end
-        end
-    end
-         config.vm.provision "shell",inline: <<-SHELL
-            mkdir -p ~root/.ssh
-            cp ~vagrant/.ssh/auth* ~root/.ssh
-            sudo sed -i 's/\#PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
-            systemctl restart sshd
+            if needsController == true
+              vm.customize ["storagectl", :id, "--name", "SATA", "--add", "sata" ]
+              boxconfig[:disks].each do |dname, dconf|
+                vm.customize ['storageattach', :id,  '--storagectl', 'SATA', '--port', dconf[:port], '--device', 0, '--type', 'hdd', '--medium', dconf[:dfile]]
+              end
+            end
+               vm.memory = boxconfig[:memory]
+               vm.cpus = boxconfig[:cpus]
+            end
+            config.vm.provision "shell", inline: <<-SHELL
+                sudo su
+                sgdisk -o /dev/sda
+                sgdisk -n 0::+2000M /dev/sda
+                sgdisk -n 0::0 /dev/sda
             SHELL
-
-end
+         end
+    end
+end           
