@@ -49,7 +49,7 @@ Last login: Sun Aug  3 17:09:49 2025 from 10.0.2.2
 
 Пробросить 80й порт на inetRouter2 8080.
 [vagrant@inetRouter2 ~]$ sudo curl localhost:8080
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+"<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">"
 
 
 root@Home:/home/kas/Рабочий стол/Crieket_lesson/iptables# vagrant up
