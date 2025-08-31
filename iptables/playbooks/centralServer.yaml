@@ -15,7 +15,7 @@
           - traceroute
 
 
-    - name: Disable default route
+    - name: default route
       lineinfile: 
         dest: /etc/sysconfig/network-scripts/ifcfg-eth0
         line: DEFROUTE="no"
@@ -34,8 +34,6 @@
       ansible.builtin.systemd:
         name: NetworkManager
         state: restarted
-
-    # --- Nginx
 
     - name: Install nginx
       ansible.builtin.yum:
