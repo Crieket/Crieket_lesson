@@ -10,7 +10,7 @@
   tasks:
   - name: update
     apt:
-      update_cache: True
+      update_cache: false
     tags:
       - update apt
 
