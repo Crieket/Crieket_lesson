@@ -1,0 +1,31 @@
+---
+# - name: instal php
+#   hosts: backend
+#   become: yes
+#   vars_files:
+#     - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
+  
+#   tasks:
+  - name: Add PHP repository
+    apt_repository:
+      repo: "ppa:ondrej/php"
+      state: present
+
+  - name: Install PHP 
+    apt:
+      name: "{{ php_packages }}"
+      state: present
+
+  - name: Configure PHP-FPM
+    template:
+      src:  /home/kas/Рабочий стол/Crieket_lesson/Project/roles/php/templates/www.conf.j2
+      dest: "/etc/php/{{ php_version }}/fpm/pool.d/www.conf"
+    notify: restart php-fpm
+
+  - name: Start and enable PHP-FPM
+    systemd:
+      name: "php{{ php_version }}-fpm"
+      state: started
+      enabled: yes
+
+      

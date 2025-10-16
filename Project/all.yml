@@ -1,0 +1,68 @@
+---
+
+# backend 
+system_user              :  wordpress
+system_group             :  wordpress
+web_root                 : /var/www/html
+#backup_dir               : 192.168.1.51:/opt/backups/wp
+cert                     : /home/kas/Рабочий стол/Crieket_lesson/Project/certssl/
+domain_name              : kas.local.ru
+#ssl_enabled:              true
+
+# MySQL 
+
+mysql_root_password: "1111"
+mysql_db_name: "wordpress"
+mysql_db_user: "wordpress"
+mysql_db_password: "2222"
+# WordPress
+
+wp_dir: "/var/www/html"
+wp_version: "6.3"
+wp_admin_user: "admin"
+wp_admin_password: "admin"
+wp_admin_email: "admin@{{ domain_name }}"
+
+# php
+php_version: "8.1"
+php_packages: 
+  - php8.1
+  - php8.1-fpm
+  - php8.1-mysqli
+  - php8.1-curl
+  - php8.1-gd
+  - php8.1-mbstring
+  - php8.1-intl
+  - php8.1-imagick
+  - php8.1-zip
+  - php8.1-dom
+
+# Ports
+nginx_port: 80
+nginx_ssl_port: 443
+php_fpm_port: 9000
+mysql_port: 3306
+#prometheus_port: 9090
+#grafana_port: 3000
+
+# Grafana Configuration
+grafana_version: "10.0.3"
+grafana_port: 3000
+grafana_admin_user: "admin"
+grafana_admin_password: "admin123"
+
+# Prometheus Configuration
+prometheus_version: "2.45.0"
+prometheus_port: 9090
+prometheus_data_dir: "/opt/prometheus/data"
+
+#common-sys
+system_packages:
+  - curl
+  - wget
+  - htop
+  - pip
+  - python3
+  - zip
+
+

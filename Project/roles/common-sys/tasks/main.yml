@@ -1,0 +1,37 @@
+---
+# - name : install sys config
+#   hosts: all
+#   become: yes
+#   vars_files:
+#    - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
+  
+#  tasks:
+    - name: TTL 
+      shell: sysctl -w net.ipv4.ip_default_ttl 65
+      shell: cat /proc/sys/net/ipv4/ip_default_ttl
+      register: ttl_default
+
+    - name: ttl output
+      debug:
+        var: ttl_default.stdout_lines
+         
+    - name: Update apt 
+      apt:
+        update_cache: yes
+
+    - name: Install common-sys
+      apt:
+        name: "{{ system_packages }}"
+        state: present
+
+    - name: Ensure firewall is configured
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop:
+        - 22
+        - 80
+        - 443
+        - "{{ prometheus_port }}"
+        - "{{ grafana_port }}"

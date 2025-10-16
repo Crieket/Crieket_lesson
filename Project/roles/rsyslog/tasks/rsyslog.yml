@@ -1,0 +1,17 @@
+---
+- name: Install rsyslog
+  apt:
+    name: rsyslog
+    state: present
+
+- name: Configure rsyslog for remote logging
+  template:
+    src: rsyslog.conf.j2
+    dest: /etc/rsyslog.conf
+  notify: restart rsyslog
+
+- name: Start and enable rsyslog
+  systemd:
+    name: rsyslog
+    state: started
+    enabled: yes
