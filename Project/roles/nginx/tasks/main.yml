@@ -1,19 +1,18 @@
 ---
 # - name: instal nginx
-#   hosts: backend
+#   hosts: nginx
 #   become: yes
 #   vars_files:
 #    - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
-  
 #   tasks:
-  - name: update cache
-    apt:
-      update_cache: yes
+  # - name: update cache
+  #    apt:
+  #     update_cache: yes
 
   - name: Install nginx
     apt: 
-      name: nginx 
-      state: latest 
+      name: nginx
+      state: present
     
   - name: Add group "wordpress"
     group: 
@@ -32,36 +31,43 @@
       path: /etc/nginx/sites-enabled/default
       state: absent
 
-  - name: Create web root dir
-    file: 
-      path: "{{ wp_dir }}"
-      state: directory 
-      owner: wordpress 
-      group: wordpress
-      mode: '0755'
+  # - name: Create web root dir
+  #   file: 
+  #     path: "{{ web_root }}"
+  #     state: directory 
+  #     owner: wordpress 
+  #     group: wordpress
+  #     mode: '0755'
 
   - name: Create nginx config file from template
     template:
       src: /home/kas/Рабочий стол/Crieket_lesson/Project/roles/nginx/templates/wordpress.conf.j2
-      dest: /etc/nginx/sites-available/{{ domain_name }}
+      dest: /etc/nginx/sites-available/wordpress.conf
     notify: restart nginx
             
   - name: Copy ssl
     copy:
       src: "{{ cert }}"
-      dest: /etc/nginx
+      dest: /etc/nginx/ssl
       owner: "{{system_user}}"
       group: "{{system_group}}"
       mode: 0664
-    
-  - name: Enable wp
+  
+  - name: Remove default site
     file:
-      src: /etc/nginx/sites-available/{{ domain_name }}
-      dest: /etc/nginx/sites-enabled/{{ domain_name }}
-      state: link
-  - name: start 
-    service: 
-    name: nginx
-    state: started 
-    enabled: yes
+      path: /etc/nginx/sites-enabled/default
+      state: absent
+    notify: restart nginx
  
+  - name: Enable site
+    file:
+      src: /etc/nginx/sites-available/wordpress.conf
+      dest: /etc/nginx/sites-enabled/wordpress.conf
+      state: link
+    notify: restart nginx
+
+  - name: start 
+    systemd: 
+      name: nginx
+      state: started 
+      enabled: yes

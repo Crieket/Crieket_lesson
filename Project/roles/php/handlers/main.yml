@@ -1,5 +1,5 @@
 ---
-- name: php started
+- name: restart php
   systemd:
-    name: php{{php_version}}-fpm
+    name: "php{{ php_version }}-fpm"
     state: restarted

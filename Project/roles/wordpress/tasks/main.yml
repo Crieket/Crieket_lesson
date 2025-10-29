@@ -1,55 +1,87 @@
 ---
 # - name: Install WP
-#   hosts: web
+#   hosts: wp
 #   become: true
 #   vars_files: 
 #   - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
 #   tasks:
-  - name: Add group "wordpress"
-    group: 
-      name: "{{ system_group }}"
- 
-  - name: Create system user
+
+# - name: Install PHP and extensions
+#   apt:
+#     name: "{{ item }}"
+#     state: present
+#   loop: "{{ php_packages }}"
+
+# - name: Install PHP-FPM
+#   apt:
+#     name: php-fpm
+#     state: present
+
+# - name: Create WordPress directory
+#   file:
+#     path: "{{ wp_dir }}"
+#     state: directory
+#     owner: "{{ wordpress_owner }}"
+#     group: "{{ wordpress_owner }}"
+#     mode: '0777'
+
+  - name: Add group "wwww-data"
+    group:
+      name: "{{ wordpress_group }}"
+
+  - name: Create a new user www-data
     user:
-      name: "{{ system_user }}"
-      group: "{{ system_group }}"
-      system: yes
+      name: "{{ wordpress_owner }}"
+      state: present
       create_home: yes
-      home: "{{ web_root }}"
       shell: /bin/bash
-      
-  - name: Download Wordpress
+      group: "{{ wordpress_group }}"
+
+  - name: Download WordPress
     get_url:
-      url: "https://wordpress.org/wordpress-{{ wp_version }}.tar.gz"
+      url: "{{ wp_url }}"
       dest: /tmp/wordpress.tar.gz
 
-  - name: Extract Wordpress
+
+  - name: Extract WordPress
     unarchive:
       src: /tmp/wordpress.tar.gz
-      dest: /tmp/
-      remote_src: no
-      creates: /tmp/wordpress
-
-  - name: Copy WordPress to web root
-    copy:
-      src: /tmp/wordpress/
-      dest: "{{ web_root }}"
+      dest: /tmp
+      owner: "{{ wordpress_owner }}"
+      group: "{{ wordpress_owner }}"
       remote_src: yes
-      owner: "{{ system_user }}"
-      group: "{{ system_group }}"
-      mode: '0664'
+    become: yes
+  - name:
+    command: "chown -R www-data:www-data /tmp/wordpress"
 
-  - name:  copy wordpress wp-config.php
+  - name: Create wp-config.php
     template:
       src: /home/kas/Рабочий стол/Crieket_lesson/Project/roles/wordpress/templates/wp-config.php.j2
-      dest: "{{ web_root }}/wp-config.php"
-      owner: "{{ system_user }}"
-      group: "{{ system_group }}"
-      mode: '0664'
+      dest: "/tmp/wordpress/wp-config.php"
+      owner: "{{ wordpress_owner }}"
+      group: "{{ wordpress_owner }}"
 
-  - name: Set proper permissions
-    file:
-      path: "{{ web_root }}"
-      owner: "{{ system_user }}"
-      group: "{{ system_group }}"
-      recurse: yes
+  - name: Copy WordPress files
+    copy:
+      src: /tmp/wordpress/
+      dest: /opt/www/wordpress/
+      remote_src: yes
+      owner: www-data
+      group: www-data
+      mode: '0755'
+    become: true
+  
+
+
+
+# - name: Configure PHP-FPM pool
+#   template:
+#     src: www.conf.j2
+#     dest: /etc/php/{{ php_version }}/fpm/pool.d/www.conf
+#   notify: restart php-fpm
+
+# - name: Start and enable PHP-FPM
+#   systemd:
+#     name: "php{{ php_version }}-fpm"
+#     state: started
+#     enabled: yes  

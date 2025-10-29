@@ -1,41 +1,58 @@
 ---
+#common-sys
+system_packages:
+  - curl
+  - wget
+  - htop
+  - pip
+  - python3
+  - zip 
+  - traceroute
+  - tcpdump
+  - nfs-kernel-server
 
-# backend 
+# nginx
 system_user              :  wordpress
 system_group             :  wordpress
-web_root                 : /var/www/html
+web_root                 : "/opt/www/wordpress"
 #backup_dir               : 192.168.1.51:/opt/backups/wp
 cert                     : /home/kas/Рабочий стол/Crieket_lesson/Project/certssl/
 domain_name              : kas.local.ru
-#ssl_enabled:              true
-
+#nfs
+nfs_server_ip: "192.168.1.51"
+nfss_dir: "/opt/www/wordpress"
+nfs_client_network: 192.168.1.0/24
+nfs_owner: www-data
+nfs_group: www-data
 # MySQL 
-
-mysql_root_password: "1111"
 mysql_db_name: "wordpress"
+mysql_server_id: "{{ {'db1_master': 1, 'db2_slave': 2}[inventory_hostname] }}"
+mysql_root_password: "1111"
+mysql_replic_user: "replic"
+mysql_replic_password: "3333"
 mysql_db_user: "wordpress"
 mysql_db_password: "2222"
 # WordPress
-
-wp_dir: "/var/www/html"
+wordpress_owner: www-data
+wordpress_group: www-data
+wp_dir: "/opt/www/wordpress"
 wp_version: "6.3"
-wp_admin_user: "admin"
-wp_admin_password: "admin"
+wp_admin_user: "wordpress"
+wp_admin_password: "1111"
 wp_admin_email: "admin@{{ domain_name }}"
+wp_url: "https://wordpress.org/wordpress-{{ wp_version }}.tar.gz"
 
 # php
 php_version: "8.1"
 php_packages: 
-  - php8.1
-  - php8.1-fpm
-  - php8.1-mysqli
-  - php8.1-curl
-  - php8.1-gd
-  - php8.1-mbstring
-  - php8.1-intl
-  - php8.1-imagick
-  - php8.1-zip
-  - php8.1-dom
+  - php{{ php_version }}
+  - php{{ php_version }}-fpm
+  - php{{ php_version }}-mysql
+  - php{{ php_version }}-curl
+  - php{{ php_version }}-gd
+  - php{{ php_version }}-mbstring
+  - php{{ php_version }}-xml
+  - php{{ php_version }}-zip
 
 # Ports
 nginx_port: 80
@@ -56,13 +73,8 @@ prometheus_version: "2.45.0"
 prometheus_port: 9090
 prometheus_data_dir: "/opt/prometheus/data"
 
-#common-sys
-system_packages:
-  - curl
-  - wget
-  - htop
-  - pip
-  - python3
-  - zip
+
+
+timezone: UTC
 
 

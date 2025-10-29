@@ -1,0 +1,55 @@
+---
+# - name: install nfs 
+#   hosts: all
+#   become: true
+#   become_method: sudo
+#   vars_files:
+#   - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
+#   ignore_errors: no 
+#   tasks:
+
+  - name: install nfs-kernel
+    apt:
+      name: nfs-kernel-server  
+      state: present
+    when: inventory_hostname == "fs" 
+
+  - name: Start nfs service
+    systemd:
+      name: nfs-server
+      state: started
+      enabled: true
+    
+  - name: Add group "owner"
+    group: 
+      name: "{{ nfs_group }}"
+
+  - name: Create a new user www-data
+    user:
+      name: "www-data"
+      state: present
+      createhome: no
+      shell: /bin/bash
+      group: "www-data" 
+  - name: Create share data directory
+    file:
+      path: "{{ nfss_dir }}"
+      state: directory
+      owner: "www-data"
+      group: "www-data"
+      recurse: yes
+      mode: '0777'
+
+  - name: exports conf
+    template:
+      src: /home/kas/Рабочий стол/Crieket_lesson/Project/roles/nfs/templates/exports.j2
+      dest: /etc/exports
+      owner: "{{ nfs_owner }}"
+      group: "{{ nfs_group }}"
+      mode: '0777'
+    notify: restart nfs-server
+  
+  - name: export filesystem
+    shell: exportfs -arv
+  - name: "Include installation tasks"
+    include_tasks: nfscl.yml

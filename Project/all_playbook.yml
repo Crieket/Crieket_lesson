@@ -1,6 +1,6 @@
 ---
-- hosts: all
-  tasks:
+# - hosts: all
+#   tasks:
 
 
 - name:
@@ -9,33 +9,39 @@
   become_method: sudo
   vars_files:
   - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
-  ignore_errors: no 
+  ignore_errors: yes
   tasks:
 
   roles:
   - role: common-sys
+  - role: nfs
   
 - name:
-  hosts: backend
+  hosts: nginx
   become: true
   become_method: sudo
   vars_files:
   - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
-  ignore_errors: yes
+  ignore_errors: no
   tasks:
 
   roles: 
   - role: nginx 
-  - role: php
+  
 
 - name:
-  hosts: web
+  hosts: wp
   become: true
   become_method: sudo
   vars_files:
   - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
   ignore_errors: no 
   tasks:
+  
+  roles:
+  - role: wordpress
+  - role: php
+
 
 - name:
   hosts: db
@@ -48,6 +54,9 @@
 
   roles: 
   - role: mysql
+
+
+   
 
 
 #  - { role: logserv }

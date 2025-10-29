@@ -1,0 +1,29 @@
+---
+# - name:
+#   hosts: all
+#   become: true
+#   become_method: sudo
+#   vars_files:
+#   - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
+#   ignore_errors: no 
+#   tasks:
+
+  - name: install nfs-common .
+    apt:
+      name: nfs-common
+      state: present
+    when: inventory_hostname != "fs" 
+
+  # - name: Start nfs service
+  #   systemd:
+  #     name: nfs-common
+  #     state: started
+  #     enabled: true
+    
+  - name: Mount  NFS 
+    mount:
+      src: "{{ nfs_server_ip }}:{{nfss_dir}}"
+      path: "{{ nfss_dir }}"
+      state: mounted
+      fstype: nfs
+    when: inventory_hostname != "fs"

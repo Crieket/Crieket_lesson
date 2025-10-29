@@ -31,8 +31,7 @@
         name: mysql
         state: started
         enabled: yes
-    
-#      
+         
 
     - name: Create WordPress db
       mysql_db:

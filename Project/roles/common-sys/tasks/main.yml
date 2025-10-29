@@ -3,18 +3,20 @@
 #   hosts: all
 #   become: yes
 #   vars_files:
-#    - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
-  
-#  tasks:
+#    - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml 
+#   tasks:
     - name: TTL 
-      shell: sysctl -w net.ipv4.ip_default_ttl 65
-      shell: cat /proc/sys/net/ipv4/ip_default_ttl
+      shell: "sysctl -w net.ipv4.ip_default_ttl 65; cat /proc/sys/net/ipv4/ip_default_ttl"
       register: ttl_default
 
     - name: ttl output
       debug:
         var: ttl_default.stdout_lines
          
+    - name: Set timezone
+      timezone:
+        name: "{{ timezone }}"
+
     - name: Update apt 
       apt:
         update_cache: yes
@@ -24,7 +26,7 @@
         name: "{{ system_packages }}"
         state: present
 
-    - name: Ensure firewall is configured
+    - name: добавляем порты в firewall
       ufw:
         rule: allow
         port: "{{ item }}"
@@ -33,5 +35,12 @@
         - 22
         - 80
         - 443
+        - 8443
+        - 8081
+        - 8080
+        - 9000
+        - 9001
         - "{{ prometheus_port }}"
         - "{{ grafana_port }}"
+        
+    
