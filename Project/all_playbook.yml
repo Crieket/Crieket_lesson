@@ -1,0 +1,113 @@
+---
+# - hosts: all
+#   tasks:
+
+
+- name:
+  hosts: all
+  become: true
+  become_method: sudo
+  vars_files:
+  - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
+  ignore_errors: yes
+  tasks:
+
+  roles:
+  - role: common-sys
+  - role: nfs
+  - role: node_exporter  
+  - role: filebeat
+
+- name:
+  hosts: nginx
+  become: true
+  become_method: sudo
+  vars_files:
+  - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
+  ignore_errors: no
+  tasks:
+
+  roles: 
+  - role: nginx 
+  
+
+- name:
+  hosts: wp
+  become: true
+  become_method: sudo
+  vars_files:
+  - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
+  ignore_errors: no 
+  tasks:
+  
+  roles:
+  - role: wordpress
+  - role: php
+
+
+- name:
+  hosts: db_master
+  become: true
+  become_method: sudo
+  vars_files:
+  - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
+  ignore_errors: yes 
+  tasks:
+
+  roles: 
+  - role: mysql_master
+
+- name:
+  hosts: db_repl
+  become: true
+  become_method: sudo
+  vars_files:
+  - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
+  ignore_errors: yes 
+  tasks:
+
+  roles: 
+  - role: mysql_repl
+   
+- name:
+  hosts: monitor
+  become: true
+  become_method: sudo
+  vars_files:
+  - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
+  ignore_errors: no 
+  tasks:
+  
+  roles:
+  - role: prometheus
+  - role: alert_manager
+
+
+- name:
+  hosts: file_sys
+  become: true
+  become_method: sudo
+  vars_files:
+  - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
+  ignore_errors: no 
+  tasks:
+  
+  roles:
+  - role: elastic
+ 
+
+- name:
+  hosts: backup
+  become: true
+  become_method: sudo
+  vars_files:
+  - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
+  ignore_errors: no 
+  tasks:
+  
+  roles:
+  - role: backup
+  
+
+
+

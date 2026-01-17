@@ -1,0 +1,163 @@
+---
+# - name: Configure NFS Clients
+#   hosts: nfs_clients
+#   become: yes
+#   vars_files:
+#      - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml    
+      
+#   tasks:
+ 
+    - name: Install NFS common package
+      apt:
+        name: nfs-common
+        state: present
+        update_cache: no
+      when: inventory_hostname != "fs"
+
+
+    - name: Check NFS exports
+      command: showmount -e "{{ nfs_server_ip }}"
+      register: nfs_exports
+      changed_when: false
+      ignore_errors: no
+
+    - name: Show  exports
+      debug:
+        var: nfs_exports.stdout
+
+   
+    - name: Create backup user on backup hosts
+      user:
+        name: backup
+        uid: 34
+        group: backup
+        system: yes
+        shell: /usr/sbin/nologin
+        create_home: no
+        state: present
+      when: inventory_hostname in ['web1', 'web2', 'dbmaster', 'dbrepl']
+      ignore_errors: no
+
+    - name: Create backup group on backup hosts
+      group:
+        name: backup
+        gid: 34
+      when: inventory_hostname in ['web1', 'web2', 'dbmaster', 'dbrepl']
+      ignore_errors: no
+
+
+    - name: Create prometheus user 
+      user:
+        name: prometheus
+        uid: 1006
+        group: prometheus
+        system: yes
+        shell: /usr/sbin/nologin
+        create_home: no
+        state: present
+      when: inventory_hostname == 'monitor'
+      ignore_errors: no
+
+
+    - name: Create elastic user 
+      user:
+        name: elastic
+        uid: 1007
+        group: elastic
+        system: yes
+        shell: /usr/sbin/nologin
+        create_home: no
+        state: present
+      when: inventory_hostname == 'fs'
+      ignore_errors: no
+
+    - name: Create elastic group
+      group:
+        name: elastic
+        gid: 1007
+      when: inventory_hostname == 'fs'
+      ignore_errors: no
+
+
+    - name: Create /opt/www directory for web 
+      file:
+        path: /opt/www/wordpress
+        state: directory
+      when: inventory_hostname in ['nginx', 'web1', 'web2']
+
+    - name: Create /opt/prometheus dir
+      file:
+        path: /opt/prometheus
+        state: directory
+        owner: prometheus
+        group: prometheus
+        mode: '0755'
+      when: inventory_hostname == 'monitor'
+      ignore_errors: no 
+
+    - name: Create /opt/elastic dir
+      file:
+        path: /opt/elastic
+        state: directory
+        owner: root  
+        group: root
+        mode: '0755'
+      when: inventory_hostname == 'fs'
+
+    - name: Create backup dir
+      file:
+        path: /opt/backups
+        state: directory
+      when: inventory_hostname in ['web1', 'dbmaster', 'dbrepl']
+    
+    - name: Mount NFS shares for WordPress
+      ansible.posix.mount:
+        src: "{{ nfs_server_ip }}:{{ nfss_dir }}"
+        path: "/opt/www/wordpress"
+        fstype: nfs
+        state: mounted
+        opts: "rw,hard,intr,noatime,nfsvers=3,nofail,x-systemd.automount"
+        boot: yes
+      when: inventory_hostname in ['nginx', 'web1', 'web2']
+
+    - name: Mount NFS shares for backups
+      ansible.posix.mount:
+        src: "{{ nfs_server_ip }}:{{ backup_dir }}" 
+        path: "/opt/backups"
+        fstype: nfs
+        state: mounted
+        opts: "rw,hard,intr,noatime,nfsvers=3,nofail,x-systemd.automount"
+        boot: yes
+      when: inventory_hostname in ['web1', 'dbmaster', 'dbrepl']
+
+    - name: Mount NFS shares for Prometheus
+      ansible.posix.mount:
+        src: "{{ nfs_server_ip }}:{{ prometheus_dir }}"
+        path: "/opt/prometheus"
+        fstype: nfs
+        state: mounted
+        opts: "rw,hard,intr,noatime,nfsvers=3,nofail,x-systemd.automount"
+        boot: yes
+      when: inventory_hostname == 'monitor'
+
+    # # Монтируем Elasticsearch
+    # - name: Mount NFS shares for Elasticsearch
+    #   ansible.posix.mount:
+    #     src: "{{ nfs_server_ip }}:{{ elasticsearch_dir }}"
+    #     path: "/opt/elastic"
+    #     fstype: nfs
+    #     state: mounted
+    #     opts: "rw,hard,intr,noatime,nfsvers=3"
+    #     boot: yes
+    #   when: inventory_hostname == 'fs'
+
+    - name: Verify mounts
+      shell: mount | grep "{{ nfs_server_ip }}" || true
+      register: mounted_shares
+      changed_when: false
+
+    - name: Show mounted shares
+      debug:
+        var: mounted_shares.stdout_lines
+
+     

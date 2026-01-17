@@ -1,0 +1,72 @@
+# ---
+# - name: instal nginx
+#   hosts: nginx
+#   become: yes
+#   vars_files:
+#    - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
+#   tasks:
+  - name: update cache
+    apt:
+      update_cache: yes
+      cache_valid_time: 30
+
+  - name: Install nginx
+    apt: 
+      name: nginx
+      state: present
+    
+  - name: Add group "wordpress"
+    group: 
+      name: "{{ system_group }}"
+
+  - name: Create a new user
+    user:
+      name: "{{ system_user }}"
+      state: present
+      createhome: no
+      shell: /bin/bash
+      group: "{{ system_group }}" 
+      
+  - name: Disable default site
+    file: 
+      path: /etc/nginx/sites-enabled/default
+      state: absent
+
+
+  - name: Create nginx config file from template
+    template:
+      src: /home/kas/Рабочий стол/Crieket_lesson/Project/roles/nginx/templates/wordpress.conf.j2
+      dest: /etc/nginx/sites-available/wordpress.conf
+    notify: restart nginx
+            
+  - name: Copy SSL certificates
+    copy:
+      src: "{{ item }}"
+      dest: /etc/nginx/ssl/
+      owner: root
+      group: root
+      mode: 0644
+    with_fileglob:
+      - "/home/kas/Рабочий стол/Crieket_lesson/Project/roles/nginx/files/ssl/*"
+  
+ 
+  - name: Enable site
+    file:
+      src: /etc/nginx/sites-available/wordpress.conf
+      dest: /etc/nginx/sites-enabled/wordpress.conf
+      state: link
+    notify: restart nginx
+  
+  - name: check  nginx
+    command: nginx -t
+    register: nginx_check
+    failed_when: nginx_check.rc != 0
+
+  - name: start 
+    systemd: 
+      name: nginx
+      state: started 
+      enabled: yes
+  
+
+

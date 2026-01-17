@@ -1,0 +1,12 @@
+---
+  - name: restart elasticsearch
+    systemd:
+      name: elasticsearch
+      state: restarted
+  
+  - name: restart filebeat
+    systemd:
+      name: filebeat
+      state: restarted
+
+

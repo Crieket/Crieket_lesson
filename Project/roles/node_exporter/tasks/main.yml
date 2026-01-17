@@ -1,0 +1,48 @@
+---
+# - name: install node_exporter
+#   hosts: all
+#   become: true
+#   become_method: sudo
+#   vars_files:
+#   - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
+#   ignore_errors: no 
+#   tasks:
+
+  - name: Add group "nodeusr"
+    group: 
+      name: "nodeusr"
+
+  - name: Create nodeusr
+    user:
+       name: nodeusr
+       system: yes
+       state: present
+       createhome: no
+       shell: /bin/false
+       group: nodeusr
+  
+  - name: Download  Exporter
+    unarchive:
+      src: "https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
+      dest: /tmp
+      remote_src: yes
+
+  - name: Copy  Exporter 
+    copy:
+      src: "/tmp/node_exporter-{{ node_exporter_version }}.linux-amd64/node_exporter"
+      dest: "/usr/local/bin/node_exporter"
+      owner: nodeusr
+      group: nodeusr
+      mode: "0755"
+      remote_src: yes
+  - name: Create systemd service Exporter
+    template:
+      src: "/home/kas/Рабочий стол/Crieket_lesson/Project/roles/node_exporter/templates/node_exporter.service.j2"
+      dest: /etc/systemd/system/node_exporter.service
+
+  - name: Start and enable  Exporter
+    systemd:
+      name: node_exporter
+      state: started
+      enabled: yes
+      daemon_reload: yes

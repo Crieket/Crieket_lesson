@@ -1,0 +1,129 @@
+---
+# - name: Prometheus + grafana
+#   hosts: monitor
+#   become: true
+#   become_method: sudo
+#   vars_files:
+#   - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
+#   ignore_errors: no 
+#   tasks:
+
+  - name: Add group "grafana"
+    group: 
+      name: "grafana"
+      gid: "{{ grafana_g_id }}"
+
+  - name: Create a new user grafana
+    user:
+      name: grafana
+      uid: "{{ grafana_u_id }}"
+      system: yes
+      state: present
+      createhome: no
+      shell: /bin/false
+
+  - name: Copy with host
+    copy:
+      src: "/home/kas/Рабочий стол/Crieket_lesson/Project/roles/prometheus/files/grafana_10.2.0_amd64.deb"
+      dest: "/tmp/grafana_10.2.0_amd64.deb"
+      owner: grafana
+      group: grafana
+      mode: '0777'
+  
+  - name:
+    apt:
+      deb: "/tmp/grafana_10.2.0_amd64.deb"
+      state: present
+  
+  - name: copy grafana.ini 
+    template:
+      src: "/home/kas/Рабочий стол/Crieket_lesson/Project/roles/prometheus/templates/grafana.ini.j2"
+      dest: "/etc/grafana/grafana.ini"
+  
+  - name: Create Grafana.service
+    template:
+      src: "/home/kas/Рабочий стол/Crieket_lesson/Project/roles/prometheus/templates/grafana.service.j2"
+      dest: "/etc/systemd/system/grafana.service"
+
+
+  - name: Reload systemd
+    systemd:
+      daemon_reload: yes
+
+  - name: Start and enable Grafana
+    systemd:
+      name: grafana
+      state: started
+      enabled: yes
+
+ 
+  - name: Add group "prometheus
+    group: 
+      name: "prometheus"
+      gid: "{{ prometheus_g_id }}"
+
+
+  - name: Create Prometheus User
+    user:
+      name: prometheus
+      uid: "{{ prometheus_u_id }}"
+      system: yes
+      shell: /bin/false
+      state: present
+      createhome: no
+      group: "prometheus"
+
+  - name: Create Prometheus Directories
+    file:
+      path: "{{ item }}"
+      state: directory
+      owner: prometheus
+      group: prometheus
+      mode: '0755'
+    with_items:
+      - /etc/prometheus/
+      - /var/lib/prometheus/
+      - /var/lib/alertmanager
+
+  - name: Download Prometheus
+    unarchive:
+      src: "/home/kas/Рабочий стол/Crieket_lesson/Project/roles/prometheus/files/prometheus-2.45.0.linux-amd64.tar.gz"
+      dest: /tmp
+
+  - name: Install Prometheus Binary
+    copy:
+      src: "/tmp/prometheus-2.45.0.linux-amd64/prometheus"
+      dest: /usr/local/bin/prometheus
+      owner: prometheus
+      group: prometheus
+      mode: '0755'
+      remote_src: yes
+
+  - name: Create alert rules
+    template:
+      src: "/home/kas/Рабочий стол/Crieket_lesson/Project/roles/prometheus/templates/alert.rules.yml.j2"
+      dest: /etc/prometheus/alert.rules.yml
+      owner: prometheus
+      group: prometheus
+    ignore_errors: yes
+
+  - name: Install Prometheus Config
+    template:
+      src: "/home/kas/Рабочий стол/Crieket_lesson/Project/roles/prometheus/templates/prometheus.yml.j2"
+      dest: /etc/prometheus/prometheus.yml
+      owner: prometheus
+      group: prometheus
+      mode: '0755'
+
+  - name: Create Prometheus Service
+    template:
+      src: "/home/kas/Рабочий стол/Crieket_lesson/Project/roles/prometheus/templates/prometheus.service.j2"
+      dest: /etc/systemd/system/prometheus.service
+
+  - name: Start and Enable Prometheus
+    systemd:
+      name: prometheus
+      state: started
+      enabled: yes
+      daemon_reload: yes
+

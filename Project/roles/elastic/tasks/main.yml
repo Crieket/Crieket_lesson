@@ -1,0 +1,86 @@
+---
+# - name: instal elasticsearch 
+#   hosts: fs
+#   become: yes
+#   vars_files:
+#     - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
+  
+  # tasks:
+    - name: Add group "elasticsearch"
+      group: 
+        name: "{{ elasticsearch_group }}"
+        gid: "{{ elasticsearch_g_id}}"
+
+    - name: Create a new user elasticsearch 
+      user:
+        name: "{{ elasticsearch_owner }}"
+        uid: "{{ elasticsearch_u_id}}"
+        system: yes
+        state: present
+        createhome: no
+        shell: /bin/bash
+        group: "{{ elasticsearch_group }}" 
+
+    - name: copy Elasticsearch 
+      copy:
+        src: "/home/kas/Рабочий стол/Crieket_lesson/Project/roles/elastic/files/elasticsearch-8.17.0-amd64.deb"
+        dest: "/tmp/elasticsearch-8.17.0-amd64.deb"
+        owner: "{{ elasticsearch_owner }}"
+        group: "{{ elasticsearch_group }}" 
+        mode: '0755'
+  
+    - name: install elasticsearch deb
+      apt:
+        deb: "/tmp/elasticsearch-8.17.0-amd64.deb"
+        state: present
+      when: inventory_hostname == "fs"
+      
+
+    - name: set Elasticsearch (elasticsearch.yml)
+      template:
+        src: /home/kas/Рабочий стол/Crieket_lesson/Project/roles/elastic/templates/elasticsearch.yml.j2
+        dest: /etc/elasticsearch/elasticsearch.yml
+        owner: "{{ elasticsearch_owner }}"
+        group: "{{ elasticsearch_group }}"
+        mode: 0644
+      notify: restart elasticsearch
+
+    - name: set params memory Elastic
+      lineinfile:
+        path: /etc/elasticsearch/jvm.options
+        regexp: "^## -Xms.*"
+        line: "-Xms2g"
+      notify: restart elasticsearch
+
+    - name: set params max memory Elastic
+      lineinfile:
+        path: /etc/elasticsearch/jvm.options
+        regexp: "^## -Xmx.*"
+        line: "-Xmx2g"
+      notify: restart elasticsearch
+
+    
+    - name: start and enable Elastic
+      systemd:
+        name: elasticsearch
+        enabled: yes
+        state: started
+        daemon_reload: yes
+    
+    - name: Wait for Elastic ready
+      wait_for:
+        host: 192.168.1.51
+        port: 9200
+        delay: 10
+        timeout: 60
+        state: started
+
+    - name: Verify Elastic is running
+      uri:
+        url: http://192.168.1.51:9200/
+        method: GET
+        status_code: 200
+      register: es_health
+      until: es_health.status == 200
+      retries: 10
+      delay: 5

@@ -1,0 +1,21 @@
+---
+global:
+ 
+receivers:
+  - name: 'telegram'
+    telegram_configs:
+      - api_url: 'https://api.telegram.org'
+        bot_token: "8162779220:AAH21fRdFSga5DegJiqC040SEJ4wAtEuw80"
+        chat_id: 1848247240
+        send_resolved: true
+        parse_mode: 'HTML'
+route:
+  receiver: 'telegram'
+  group_by: ['alertname', 'instance', 'severity']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+  routes:
+    - match:
+        severity: 'critical'
+      receiver: 'telegram'

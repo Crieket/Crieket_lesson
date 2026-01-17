@@ -1,0 +1,109 @@
+---
+- name: Restore db wp
+  hosts: all
+  become: yes
+  vars_files:
+    - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
+
+
+  tasks:
+    - name: last DB backup 
+      shell: "ls {{ backup_dir }}/dbmaster_backup_*.sql | sort -V | tail -n1 | xargs basename"
+      delegate_to: fs
+      register: latest_db_backup
+      run_once: true
+
+    - name: Set timestamp 
+      set_fact:
+        restore_timestamp: "{{ latest_db_backup.stdout | regex_replace('dbmaster_backup_(\\d+)\\.sql', '\\1') }}"
+      run_once: true
+
+
+    - name: Reset MySQL GTID state on dbmaster 
+      mysql_query:
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        query: |
+          RESET MASTER;    
+      when: inventory_hostname == "dbmaster"
+
+    - name: Restore  database
+      community.mysql.mysql_db:
+        state: import
+        name: "{{ mysql_db_name }}"
+        target: "{{ backup_dir }}/dbmaster_backup_{{ restore_timestamp }}.sql"
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+      when: inventory_hostname == "dbmaster"
+
+
+
+    - name: Ensure web root directory exists
+      file:
+        path: "{{ web_root }}"
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: '0755'
+      when: inventory_hostname == "web1"
+
+    - name: Stop web server before cleanup
+      systemd:
+        name: "{{ item }}"  
+        state: stopped
+      loop:
+        - nginx
+        - php8.1-fpm
+      when: inventory_hostname == "nginx"
+
+    - name: Remove all files WordPress directory 
+      file:
+        path: "{{ web_root }}/{{ item }}"
+        state: absent
+      loop:
+        - wp-config.php
+        - wp-content
+        - wp-admin
+        - wp-includes
+        - index.php
+      when: inventory_hostname == "web1"
+    
+    - name: last DB backup 
+      shell: "ls {{ backup_dir }}/web1_wordpress_backup_*.tar.gz | sort -V | tail -n1 | xargs basename"
+      delegate_to: fs
+      register: latest_web1_wordpress_backup
+      run_once: true
+
+    - name: Set timestamp 
+      set_fact:
+        restore_timestamp: "{{ latest_web1_wordpress_backup.stdout | regex_replace('web1_wordpress_backup_(\\d+)\\.tar.gz', '\\1') }}"
+      run_once: true
+
+    - name: Extract WordPress 
+      unarchive:
+        src: "{{ backup_dir }}/web1_wordpress_backup_{{ restore_timestamp }}.tar.gz"
+        dest: /opt/www/
+        remote_src: yes
+        creates: "{{ web_root }}/wp-config.php"
+      when: inventory_hostname == "web1"
+
+    - name: Fix file permissions
+      file:
+        path: "{{ web_root }}"
+        owner: www-data
+        group: www-data
+        mode: '0755'
+        recurse: yes
+      when: inventory_hostname == "web1"
+
+    - name: Start web server on web1
+      systemd:
+        name: "{{ item }}"        
+        state: started
+      loop:
+        - nginx
+        - php8.1-fpm
+      when: inventory_hostname == "nginx"
+

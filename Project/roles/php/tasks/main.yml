@@ -1,0 +1,30 @@
+---
+# - name: instal php
+#   hosts: nginx
+#   become: yes
+#   vars_files:
+#     - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
+  
+#   tasks:
+  - name: Install PHP and extensions
+    apt:
+      name: "{{ item }}"
+      state: present
+    loop: "{{ php_packages }}"
+
+  - name: Install PHP-FPM
+    apt:
+      name: php-fpm
+      state: present
+  
+  - name: Configure PHP-FPM 
+    template:
+      src: /home/kas/Рабочий стол/Crieket_lesson/Project/roles/php/templates/www.conf.j2
+      dest: /etc/php/{{ php_version }}/fpm/pool.d/www.conf
+    notify: restart php
+
+  - name: Start and enable PHP-FPM
+    systemd:
+      name: "php{{ php_version }}-fpm"
+      state: started
+      enabled: yes  

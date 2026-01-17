@@ -1,0 +1,142 @@
+---
+# - name: install NFS Server
+#   hosts: fs 
+#   become: yes
+#   vars_files:
+#     - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
+
+  # tasks:
+  
+  - name: Установка NFS-сервера
+    apt:
+      name:
+        - nfs-kernel-server
+      state: present
+      update_cache: no
+    when: inventory_hostname == "fs"
+
+  - name: Add group 
+    group: 
+      name: "{{ item.name }}"
+      gid: "{{ item.gid }}"
+    loop:
+      - { name: backup, uid: 34, gid: 34 }
+      - { name: elastic, uid: 1007, gid: 1007 }
+      - { name: prometheus, uid: 1006, gid: 1006 }      
+      - { name: www-data, uid: 33, gid: 33 }
+
+  - name: Создание пользователей
+    user:
+      name: "{{ item.name }}"
+      uid: "{{ item.uid}}"
+      system: yes      
+      shell: /usr/sbin/nologin
+      create_home: no
+      state: present
+    loop:
+      - { name: backup, uid: 34, gid: 34 }
+      - { name: elastic, uid: 1007, gid: 1007 }
+      - { name: prometheus, uid: 1006, gid: 1006 }      
+      - { name: www-data, uid: 33, gid: 33 }
+
+
+  - name: Создание директорий
+    file:
+      path: "{{ item.path }}"
+      state: directory
+      owner: "{{ item.owner }}"
+      group: "{{ item.group }}"
+      mode: '0777'
+    loop:
+      - { path: /opt/backups, owner: backup, group: backup }
+      - { path: /opt/www/wordpress, owner: www-data, group: www-data }
+      - { path: /opt/elastic, owner: elastic, group: elastic }
+      - { path: /opt/prometheus, owner: prometheus, group: prometheus }
+
+  - name: Получение UID пользователя backup
+    command: id -u backup
+    register: backup_uid_result
+    changed_when: false
+
+  - name: Получение GID пользователя backup
+    command: id -g backup
+    register: backup_gid_result
+    changed_when: false
+
+  - name: Получение UID пользователя www-data
+    command: id -u www-data
+    register: www_data_uid_result
+    changed_when: false
+
+  - name: Получение GID пользователя www-data
+    command: id -g www-data
+    register: www_data_gid_result
+    changed_when: false
+
+  - name: Получение UID пользователя elastic
+    command: id -u elastic
+    register: elastic_uid_result
+    changed_when: false
+
+  - name: Получение GID пользователя elastic
+    command: id -g elastic
+    register: elastic_gid_result
+    changed_when: false
+
+  - name: Получение UID пользователя prometheus
+    command: id -u prometheus
+    register: prometheus_uid_result
+    changed_when: false
+
+  - name: Получение GID пользователя prometheus
+    command: id -g prometheus
+    register: prometheus_gid_result
+    changed_when: false
+
+  - name: Установка переменных UID/GID
+    set_fact:
+      backup_uid: "{{ backup_uid_result.stdout }}"
+      backup_gid: "{{ backup_gid_result.stdout }}"
+      www_data_uid: "{{ www_data_uid_result.stdout }}"
+      www_data_gid: "{{ www_data_gid_result.stdout }}"
+      elastic_uid: "{{ elastic_uid_result.stdout }}"
+      elastic_gid: "{{ elastic_gid_result.stdout }}"
+      prometheus_uid: "{{ prometheus_uid_result.stdout }}"
+      prometheus_gid: "{{ prometheus_gid_result.stdout }}"
+
+  - name: Настройка /etc/exports
+    copy:
+      dest: /etc/exports
+      owner: root
+      group: root
+      mode: '0644'
+      content: |
+        /opt/backups 192.168.1.31(rw,sync,no_subtree_check,all_squash,anonuid={{ backup_uid }},anongid={{ backup_gid }})
+        /opt/backups 192.168.1.41(rw,sync,no_subtree_check,all_squash,anonuid={{ backup_uid }},anongid={{ backup_gid }})
+        /opt/backups 192.168.1.42(rw,sync,no_subtree_check,all_squash,anonuid={{ backup_uid }},anongid={{ backup_gid }}) 
+        /opt/backups 192.168.1.51(rw,sync,no_subtree_check,all_squash,anonuid={{ backup_uid }},anongid={{ backup_gid }})
+
+        /opt/www/wordpress 192.168.1.31(rw,sync,no_subtree_check,all_squash,anonuid={{ www_data_uid }},anongid={{ www_data_gid }})
+        /opt/www/wordpress 192.168.1.32(rw,sync,no_subtree_check,all_squash,anonuid={{ www_data_uid }},anongid={{ www_data_gid }})
+        /opt/www/wordpress 192.168.1.10(rw,sync,no_subtree_check,all_squash,anonuid={{ www_data_uid }},anongid={{ www_data_gid }})
+      
+        /opt/elastic 192.168.1.31(rw,sync,no_subtree_check,all_squash,anonuid={{ elastic_uid }},anongid={{ elastic_gid }})
+        /opt/elastic 192.168.1.32(rw,sync,no_subtree_check,all_squash,anonuid={{ elastic_uid }},anongid={{ elastic_gid }})
+        /opt/elastic 192.168.1.51(rw,sync,no_subtree_check,all_squash,anonuid={{ elastic_uid }},anongid={{ elastic_gid }})
+      
+        /opt/prometheus 192.168.1.31(rw,sync,no_subtree_check,all_squash,anonuid={{ prometheus_uid }},anongid={{ prometheus_gid }})
+        /opt/prometheus 192.168.1.32(rw,sync,no_subtree_check,all_squash,anonuid={{ prometheus_uid }},anongid={{ prometheus_gid }})
+        /opt/prometheus 192.168.1.51(rw,sync,no_subtree_check,all_squash,anonuid={{ prometheus_uid }},anongid={{ prometheus_gid }})
+        /opt/prometheus 192.168.1.61(rw,sync,no_subtree_check,all_squash,anonuid={{ prometheus_uid }},anongid={{ prometheus_gid }})
+
+  - name: Применить экспорт
+    command: exportfs -ra
+    changed_when: false
+
+  - name: Перезапустить NFS
+    systemd:
+      name: nfs-server
+      state: restarted
+      enabled: yes
+
+      

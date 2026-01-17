@@ -1,0 +1,136 @@
+---
+# - name :  Install mysql_repl
+#   hosts: dbrepl
+#   become: yes
+#   ignore_errors: no
+#   vars_files:
+#     - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
+#   gather_facts: true
+#   tasks:
+
+    - name: update cache
+      apt:
+        update_cache: yes
+    
+    
+    - name: Install MySQL 
+      apt: 
+        pkg={{ item }}
+      with_items:
+          - mysql-server
+          - python3-mysqldb
+          - pip
+
+    - name: Install PyMySQL using pip
+      ansible.builtin.pip:
+        name: pymysql
+        state: present
+
+    - name: Start and enable MySQL 
+      service:
+        name: mysql
+        state: started
+        enabled: yes
+ 
+    - name: Wait for MySQL to be ready
+      wait_for:
+        path: /var/run/mysqld/mysqld.sock
+        state: started
+        timeout: 30
+
+
+    # - name: Verify root password
+    #   mysql_query:
+    #     login_user: root
+    #     login_password: "{{ mysql_root_password }}"
+    #     login_unix_socket: /var/run/mysqld/mysqld.sock
+    #     query: "SELECT 1;"
+    #   register: root_connection
+    #   ignore_errors: yes
+
+    - name: restart mysql
+      service:
+        name: mysql
+        state: restarted
+ 
+
+    - name: Copy my.cnf to db_repl
+      become: yes
+      copy:
+        src: /home/kas/Рабочий стол/Crieket_lesson/Project/roles/mysql_repl/templates/my.cnf.j2
+        dest: /etc/mysql/my.cnf
+        owner: root
+        group: root
+        mode: '0644'
+      notify:
+        - restart mysql
+
+    - name: Create wp user
+      mysql_user:
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        user:  "{{ mysql_db_user }}"
+        password: "{{ mysql_db_password }}"
+        host: "%"
+        priv: "{{ mysql_db_name }}.*:ALL"
+        state: present
+
+    - name: Create replication user
+      mysql_user:
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        user: "{{ mysql_repl_user }}"
+        password: "{{ mysql_repl_password }}"
+        host: "%"
+        priv: "*.*:REPLICATION SLAVE"
+        state: present
+
+    - name: Flush 
+      mysql_query:
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        query: "FLUSH PRIVILEGES"
+    
+    - name: Stop replication
+      mysql_replication:
+        mode: stopreplica
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+      when: inventory_hostname == "dbrepl"
+
+    - name: Conf replusing mysql_repl
+      mysql_replication:
+        mode: changeprimary
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        master_host: "{{ hostvars['dbmaster'].ansible_host }}"
+        master_user: "{{ mysql_repl_user }}"
+        master_password: "{{ mysql_repl_password }}"
+        master_auto_position: 1 
+      when: inventory_hostname == "dbrepl"
+
+    - name: Start replication
+      mysql_replication:
+        mode: startreplica
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+      when: inventory_hostname == "dbrepl"
+    
+    - name: Check repl status
+      mysql_query:
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        query: "SHOW REPLICA STATUS"
+      register: replica_status
+
+    - name:
+      debug:
+        msg: "Replica status: {{replica_status}}"
+

@@ -1,0 +1,14 @@
+# NFS Exports - WordPress
+/opt/www/wordpress 192.168.1.0/24(rw,sync,no_subtree_check,no_root_squash,anonuid=33,anongid=33)
+
+# NFS Exports - Prometheus
+/opt/prometheus/data 192.168.1.0/24(rw,sync,no_subtree_check,root_squash,anonuid=1002,anongid=1002)
+
+# NFS Exports - Elasticsearch
+/opt/elastic/data 192.168.1.0/24(rw,sync,no_subtree_check,no_root_squash,anonuid=1003,anongid=1003)
+
+# NFS Exports - WordPress backups
+/opt/backups 192.168.1.0/24(rw,sync,no_subtree_check,root_squash,anonuid=34,anongid=34)
+
+# NFS Exports - Database backups
+#/opt/backups 192.168.1.0/24(rw,sync,no_subtree_check,root_squash)

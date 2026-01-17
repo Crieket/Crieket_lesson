@@ -1,0 +1,64 @@
+---
+- name: backup db and web
+  hosts: backup
+  become: yes
+  vars_files:
+   - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
+
+  tasks:
+    - name: Create database dump
+      community.mysql.mysql_db:
+        state: dump
+        name: "{{ mysql_db_name }}"
+        target: "/tmp/{{ db_backup_file }}"
+        login_user: "{{ mysql_db_user }}"
+        login_password: "{{ mysql_db_password }}"
+      when: inventory_hostname == "dbmaster"
+
+    - name: Copy database backup to fs
+      copy:
+        src: "/tmp/{{ db_backup_file }}"
+        dest: "{{ backup_dir }}/dbmaster_backup_{{ ansible_date_time.epoch }}.sql"       
+        remote_src: yes 
+      delegate_to: dbmaster 
+      run_once: false
+      when: inventory_hostname == "dbmaster"
+
+    - name: Clean 
+      file:
+        path: "/tmp/{{ db_backup_file }}"
+        state: absent
+      when: inventory_hostname == "dbmaster"
+
+    - name: Create archive of WordPress files
+      archive:
+        path: "{{ web_root }}"
+        dest: "{{ backup_dir }}/{{ inventory_hostname }}_{{ web_backup_dir }}.tar.gz"
+        format: gz
+      when: inventory_hostname == "web1"
+
+
+    - name: Clean local 
+      file:
+        path: "/tmp/{{ inventory_hostname }}_{{ web_backup_dir }}.tar.gz"
+        state: absent
+      when: inventory_hostname in groups ['wp']
+
+    - name: Check backup 
+      stat:
+        path: "{{ backup_dir }}/{{ item }}"
+      register: backup_files
+      loop:
+        - "{{ db_backup_file }}"
+        - "web1_{{ web_backup_dir }}.tar.gz"
+      delegate_to: fs
+      run_once: false
+
+    # - name: Add cron job for backup
+    #   cron:
+    #     name: "Backup DB and WP every 5 minutes"
+    #     minute: "*/5"
+    #     job: "/home/kas/Рабочий стол/Crieket_lesson/Project/roles/backups/backup_every_5_min_cron.sh"
+    #     user: root
+    #   delegate_to: fs
+    #   run_once: true

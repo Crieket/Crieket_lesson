@@ -1,0 +1,70 @@
+---
+# - name: install alert_manager
+#   hosts: monitor
+#   become: true
+#   become_method: sudo
+#   vars_files:
+#   - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
+#   ignore_errors: no 
+  # tasks:
+  - name: Add group "alertmanager"
+    group: 
+      name: "alertmanager"
+
+  - name: Create "alertmanager"
+    user:
+       name: alertmanager
+       system: yes
+       state: present
+       createhome: no
+       shell: /bin/false
+       group: "alertmanager"
+
+  - name: Download Alertmanager
+    unarchive:
+      src: "/home/kas/Рабочий стол/Crieket_lesson/Project/roles/alert_manager/files/alertmanager-{{ alertmanager_version }}.linux-amd64.tar.gz"
+      dest: /tmp
+      remote_src: no
+
+  - name: Create dir alertmanager
+    file:
+      path: "{{ item }}"
+      state: directory
+      owner: alertmanager
+      group: alertmanager
+      mode: '0777'
+    with_items:
+      - /etc/alertmanager/
+      - /var/lib/prometheus/alertmanager/
+      - /usr/local/bin/alertmanager/
+
+  - name: Copy Alertmanager /usr/local/bin/
+    copy:
+      src: "/tmp/alertmanager-{{ alertmanager_version }}.linux-amd64/{{ item }}"
+      dest: "/usr/local/bin/{{ item }}"
+      owner: alertmanager
+      group: alertmanager
+      mode: "0755"
+      remote_src: yes
+    loop:
+      - alertmanager
+      - amtool
+
+  - name: Configure Alertmanager
+    template:
+      src: "/home/kas/Рабочий стол/Crieket_lesson/Project/roles/alert_manager/templates/alertmanager.yml.j2"
+      dest: "/etc/alertmanager/alertmanager.yml"
+      owner: alertmanager
+      group: alertmanager
+      
+  - name: Create systemd service for Alertmanager
+    template:
+      src: "/home/kas/Рабочий стол/Crieket_lesson/Project/roles/alert_manager/templates/alertmanager.service.j2"
+      dest: /etc/systemd/system/alertmanager.service
+
+  - name: Start and enable Alertmanager
+    systemd:
+      name: alertmanager
+      state: started
+      enabled: yes
+      daemon_reload: yes

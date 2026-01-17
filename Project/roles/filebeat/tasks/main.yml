@@ -1,0 +1,82 @@
+---
+# - name: install filebeat
+#   hosts: all
+#   become: true
+#   become_method: sudo
+#   vars_files:
+#   - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
+#   ignore_errors: no 
+#   tasks:
+    
+    - name: Add group "filebeat"
+      group: 
+        name: "{{ filebeat_group }}"
+
+    - name: Create a new user filebeat
+      user:
+        name: "{{ filebeat_owner }}"
+        state: present
+        createhome: no
+        shell: /bin/bash
+        group: "{{ filebeat_group }}" 
+
+    - name: copy filebeat
+      copy:
+        src: "/home/kas/Рабочий стол/Crieket_lesson/Project/roles/filebeat/files/filebeat-8.17.0-amd64.deb"
+        dest: "/tmp/filebeat-8.17.0-amd64.deb"
+        owner: "{{ filebeat_owner }}"
+        group: "{{ filebeat_group }}" 
+        mode: '0777'
+  
+    - name: install deb filebeat
+      apt:
+        deb: "/tmp/filebeat-8.17.0-amd64.deb"
+        state: present
+    
+    - name: Stop Filebeat service  run
+      systemd:
+        name: filebeat
+        state: stopped
+      ignore_errors: yes
+
+    - name: Configure Filebeat
+      template:
+        src: /home/kas/Рабочий стол/Crieket_lesson/Project/roles/filebeat/templates/filebeat.yml.j2
+        dest: /etc/filebeat/filebeat.yml 
+      notify: restart filebeat
+
+    - name: Enable system module
+      command: filebeat modules enable system
+
+    - name: Configure system module
+      copy:
+        dest: /etc/filebeat/modules.d/system.yml
+        content: |
+          - module: system
+            syslog:
+              enabled: true
+              var.paths: ["/var/log/syslog*", "/var/log/messages*"]
+            auth:
+              enabled: true
+              var.paths: ["/var/log/auth.log*", "/var/log/secure*"]
+        owner: root
+        group: root
+        mode: '0644'
+
+    # - name: Setup Filebeat
+    #   command: filebeat setup
+
+    - name: Start and enable Filebeat
+      systemd:
+        name: filebeat
+        state: started
+        enabled: yes
+    - name: Wait for Filebeat to start
+      pause:
+        seconds: 5
+
+    - name: Check Filebeat status
+      systemd:
+        name: filebeat
+        state: started
+ 

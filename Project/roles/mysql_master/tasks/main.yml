@@ -1,0 +1,116 @@
+---
+- name :  Install mysql_master
+  hosts: dbmaster
+  become: yes
+  ignore_errors: yes
+  vars_files:
+    - /home/kas/Рабочий стол/Crieket_lesson/Project/all.yml
+  tasks:
+
+    - name: update cache
+      apt:
+       update_cache: yes
+
+
+    - name: Install MySQL 
+      apt: 
+        pkg={{ item }}
+      with_items:
+          - mysql-server
+          - python3-mysqldb
+          - pip
+
+    - name: Install PyMySQL using pip
+      ansible.builtin.pip:
+        name: pymysql
+        state: present
+
+    - name: Start and enable MySQL 
+      service:
+        name: mysql
+        state: started
+        enabled: yes
+        
+    # - name: Set MySQL root password
+    #   mysql_user:
+    #     login_user: root
+    #     login_password: ""
+    #     login_unix_socket: /var/run/mysqld/mysqld.sock
+    #     user: root
+    #     password: "{{ mysql_root_password }}"
+    #     host: localhost
+    #     check_implicit_admin: yes
+
+    - name: Copy my.cnf to db_master
+      become: yes
+      copy:
+        src: /home/kas/Рабочий стол/Crieket_lesson/Project/roles/mysql_master/templates/my.cnf.j2
+        dest: /etc/mysql/my.cnf
+        owner: root
+        group: root
+        mode: '0644'
+      notify:
+        - restart mysql
+     
+    - name: Create WordPress db
+      mysql_db:
+        name: "{{ mysql_db_name }}"
+        state: present
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+      
+    
+    - name: Create wp user
+      mysql_user:
+        login_user: root
+        login_password: "{{ mysql_root_password  }}"
+        user:  "{{ mysql_db_user }}"
+        password: "{{ mysql_db_password }}"
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        host: "%"
+        priv: "{{ mysql_db_name }}.*:ALL"
+        state: present
+        
+    - name: Create user repl
+      mysql_user:
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        user: "{{ mysql_repl_user }}"
+        password: "{{ mysql_repl_password}}"
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        host: "%"
+        priv: "*.*:REPLICATION SLAVE"
+        state: present
+
+    - name: Flush 
+      mysql_user:
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        user: root
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        host: '%'
+        state: present
+      
+
+    - name: Get master status 
+      shell: |
+        mysql -u root -p{{ mysql_root_password }} -e "SHOW MASTER STATUS" --skip-column-names
+      register: master_status_shell
+      when: inventory_hostname == "dbmaster"
+
+    - name: get master status
+      set_fact:
+        master_log_file: "{{ master_status_shell.stdout_lines[0].split()[0] }}"
+        master_log_pos: "{{ master_status_shell.stdout_lines[0].split()[1] }}"
+      delegate_to: dbmaster
+      run_once: true
+
+    - name: Display get master status
+      debug:
+        msg: "Master Log File: {{ master_log_file }}, Position: {{ master_log_pos }}" 
+      when: inventory_hostname == "dbmaster"   
+
+
+
+   

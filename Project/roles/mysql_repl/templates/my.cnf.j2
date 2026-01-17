@@ -1,0 +1,41 @@
+[mysqld]
+skip-name-resolve
+# Basic Configuration
+user            = mysql
+pid-file        = /var/run/mysqld/mysqld.pid
+socket          = /var/run/mysqld/mysqld.sock
+port            = 3306
+basedir         = /usr
+datadir         = /var/lib/mysql
+tmpdir          = /tmp
+lc-messages-dir = /usr/share/mysql
+
+# Network
+bind-address    = 0.0.0.0
+
+# Replication Configuration
+server-id       = 2
+log_bin         = /var/log/mysql/mysql-bin.log
+binlog_format   = ROW
+relay_log       = /var/log/mysql/mysql-relay-bin.log
+log_slave_updates = 1
+read_only       = 1
+binlog_expire_logs_seconds = 150
+max_binlog_size = 100M
+
+# GTID Configuration
+gtid-mode = ON
+enforce-gtid-consistency = ON
+
+# Replication Filters
+replicate_do_db = {{ mysql_db_name }}
+# Innodb Settings
+innodb_flush_log_at_trx_commit = 1
+sync_binlog     = 1
+
+[mysql]
+port = 3306
+socket = /var/run/mysqld/mysqld.sock
+[client]
+user=root
+password = {{ mysql_root_password }}

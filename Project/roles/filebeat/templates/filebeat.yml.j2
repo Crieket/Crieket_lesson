@@ -1,0 +1,28 @@
+filebeat.config:
+  modules:
+    path: /etc/filebeat/modules.d/*.yml
+    reload.enabled: true
+    reload.period: 10s
+
+filebeat.inputs:
+- type: log
+  enabled: true
+  paths:
+    - /var/log/*.log
+    - /var/log/syslog
+    - /var/log/messages
+    - /var/log/secure
+  fields:
+    log_type: 'system'
+  fields_under_root: true  
+scan_frequency: 10s
+
+
+output.elasticsearch:
+  hosts: ["192.168.1.51:9200"]
+  indices:
+    - index: "filebeat-system-%{[agent.version]}-%{+yyyy.MM.dd}"
+      when.equals:
+        log_type: "system"
+
+ssl.enabled: false

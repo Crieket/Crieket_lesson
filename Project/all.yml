@@ -1,0 +1,129 @@
+---
+#common-sys
+system_packages:
+  - chrony
+  - curl
+  - wget
+  - htop
+  - pip
+  - python3
+  - zip 
+  - traceroute
+  - tcpdump
+  - nfs-kernel-server
+# Backup 
+src_web1: "192.168.3.31"
+copy_backup_dir_db : "192.168.1.51:/opt/backups"
+copy_backup_dir_wp : "192.168.1.51:/opt/backups"
+backup_dir             : "/opt/backups"
+db_backup_file: "dbmaster_backup_{{ ansible_date_time.epoch }}.sql"
+web_backup_dir: "wordpress_backup_{{ ansible_date_time.epoch }}"
+
+# nginx
+system_user              :  www-data
+system_group             :  www-data
+web_root                 : "/opt/www/wordpress"
+cert                     : "/home/kas/Рабочий стол/Crieket_lesson/Project/roles/nginx/files/"
+domain_name              : "kas.local.ru"
+#nfs
+
+
+backup_uid: "{{ getent_passwd['backup'][1] }}"
+backup_gid: "{{ getent_group['backup'][1] }}"
+www_data_uid: "{{ getent_passwd['www-data'][1] }}"
+www_data_gid: "{{ getent_group['www-data'][1] }}"
+elastic_uid: "{{ getent_passwd['elastic'][1] }}"
+elastic_gid: "{{ getent_group['elastic'][1] }}"
+prometheus_uid: "{{ getent_passwd['prometheus'][1] }}"
+prometheus_gid: "{{ getent_group['prometheus'][1] }}"
+
+nfss_dir: "/opt/www/wordpress"
+mount_dirs:
+  - { path: "/opt/www/wordpress", owner: "www-data", group: "www-data", mode: "0755" }
+  - { path: "/opt/backups", owner: "backup", group: "backup", mode: "0755" }
+  - { path: "/opt/backups", owner: "backup", group: "backup", mode: "0755" }
+  - { path: "/opt/prometheus", owner: "prometheus", group: "prometheus", mode: "0755" }
+  - { path: "/opt/elastic/data", owner: "elastic", group: "elastic", mode: "0755" }
+  
+nfs_server_ip: "192.168.1.51"
+nfs_client_network: 192.168.1.0/24
+nfs_owner: www-data
+nfs_group: www-data
+# MySQL 
+mysql_db_name: "wordpress"
+mysql_root_password: "1111"
+mysql_db_user: "wordpress"
+mysql_db_password: "2222"
+mysql_repl_user: "repl"
+mysql_repl_password: "3333"
+# WordPress
+wordpress_owner: www-data
+wordpress_group: www-data
+wp_dir: "/opt/www/wordpress"
+wp_version: "6.3"
+wp_admin_user: "wordpress"
+wp_admin_password: "1111"
+wp_admin_email: "admin@{{ domain_name }}"
+wp_url: "https://wordpress.org/wordpress-{{ wp_version }}.tar.gz"
+
+# php
+php_version: "8.1"
+php_packages: 
+  - php{{ php_version }}
+  - php{{ php_version }}-fpm
+  - php{{ php_version }}-mysql
+  - php{{ php_version }}-curl
+  - php{{ php_version }}-gd
+  - php{{ php_version }}-mbstring
+  - php{{ php_version }}-xml
+  - php{{ php_version }}-zip
+
+# Ports
+nginx_port: 80
+nginx_ssl_port: 443
+php_fpm_port: 9000
+mysql_port: 3306
+
+# Grafana Configuration
+grafana_u_id: 1005
+grafana_g_id: 1005
+grafana_version: "12.2.1"
+grafana_port: 3000
+grafana_admin_user: "admin"
+grafana_admin_password: "Kas12843"
+grafana_data_dir: "/opt/prometheus/data"
+
+# Prometheus Configuration
+
+prometheus_u_id: 1006
+prometheus_g_id: 1006
+prometheus_version: "2.45.0"
+prometheus_port: 9090
+prometheus_dir: "/opt/prometheus/"
+
+timezone: Europe/Moscow
+
+
+#Elasticsearch settings
+elasticsearch_version:  "9.1.6"
+elasticsearch_cluster_name: "my-clyster"
+elasticsearch_node_name: "{{ ansible_hostname }}"
+elasticsearch_data_dir: "/opt/elastic/"
+elasticsearch_log_dir: "/var/log/elasticsearch"
+elasticsearch_port: "9200"
+elasticsearch_owner: elastic
+elasticsearch_group: elastic
+elasticsearch_u_id: 1007
+elasticsearch_g_id: 1007
+elasticsearch_password: "4444"
+
+# Filebeat settings
+filebeat_version: "8.17.0"
+elasticsearch_host: "192.168.1.51"
+filebeat_owner: filebeat
+filebeat_group: filebeat
+#node_exporter
+node_exporter_version: "1.10.2"
+
+#alertmanager
+alertmanager_version: "0.26.0"
