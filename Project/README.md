@@ -14,12 +14,12 @@
 
 Описание виртуальных стендов поднятых на Vagrant: 
 
-- nginx  revers_proxy + php.
+- nginx - revers_proxy + php.
 - web1,2 wordpress - для распределения нагрузки.
 - db_master на mysql, database: wordpress.
 - db_repl - репликация по Gtid.
-- monitor - система мониторинга (Prometheus, Grafana) < node_exporter + alert_manager c уведомлением в telegram 
-
+- monitor - система мониторинга (Prometheus, Grafana) < node_exporter +      
+    alert_manager c уведомлением в telegram 
 - fs - file server - поднят (NFS)-server c автомонтированием на хостах. 
           /opt/
                 - www/wordpress (файлы wordpress)

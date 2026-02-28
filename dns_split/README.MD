@@ -11,6 +11,14 @@ www - смотрит на обоих клиентов
 клиент1 - видит обе зоны, но в зоне dns.lab только web1
 клиент2 видит только dns.lab
 
-Дополнительное задание
-* настроить все без выключения selinux
 
+  * zones: dns.lab, reverse dns.lab and ddns.lab
+  * ns01 (192.168.50.10)
+    * master, recursive, allows update to ddns.lab
+  * ns02 (192.168.50.11)
+    * slave, recursive
+  * client1 (192.168.50.15)
+    * used to test the env, runs rndc and nsupdate
+  * client2 (192.168.50.16)
+    * used to test the env, runs rndc and nsupdate
+  * zone transfer: TSIG key

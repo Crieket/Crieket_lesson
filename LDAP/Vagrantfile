@@ -1,0 +1,45 @@
+Vagrant.configure("2") do |config|
+    config.vm.box = "almalinux/9"
+ 
+    config.vm.provider :virtualbox do |v|
+      v.memory = 2048
+      v.cpus = 2
+    end
+  
+    # Указываем имена хостов и их IP-адреса
+    boxes = [
+      { :name => "ipa.otus.lan",
+        :ip => "192.168.56.10",
+      },
+      { :name => "client1.otus.lan",
+        :ip => "192.168.56.11",
+      },
+      { :name => "client2.otus.lan",
+        :ip => "192.168.56.12",
+      }
+    ]
+    # Цикл запуска виртуальных машин
+    boxes.each do |opts|
+      config.vm.define opts[:name] do |config|
+        config.vm.hostname = opts[:name]
+        config.vm.network "private_network", ip: opts[:ip]
+      end
+
+      config.vm.provision "shell", inline: <<-SHELL
+  # Разрешаем root-логин по ключу (без пароля!)
+        mkdir -p ~root/.ssh
+        cp ~vagrant/.ssh/authorized_keys ~root/.ssh/
+        chmod 700 ~root/.ssh
+        chmod 600 ~root/.ssh/authorized_keys
+
+  # Гарантированно разрешаем root-логин по ключу
+        echo "PermitRootLogin prohibit-password" >> /etc/ssh/sshd_config
+
+  # Убеждаемся, что парольная аутентификация для vagrant остаётся включённой
+        sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+  # Перезагружаем SSH
+        systemctl reload sshd || systemctl restart sshd
+      SHELL
+    end
+end

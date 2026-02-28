@@ -1,53 +1,43 @@
-ENV['VAGRANT_SERVER_URL'] = 'https://vagrant.elab.pro'
+BOX_NAME = "ubuntu/22.04"
 
 MACHINES = {
-    :backup => {
-        :box_name => "ubuntu/22.04",
-        :ip_addr => '192.168.56.10',
-        :memory => 2048,
-        :cpus => 2,
-        :disk  => {
-          :sata1 => {
-            :dfile => './disk1.vdi',
-            :size => 2048,
-            :port => 2
-            }        
-        }
-    }
+  :backup => {
+    :networks => [
+          [ "192.168.1.10",   2, "255.255.255.0", "internal" ],
+          [ "192.168.56.10",  8 ]
+    ],
+  },
+  :client => {
+    :networks => [
+          [ "192.168.1.20",  2, "255.255.255.0", "internal" ],
+          [ "192.168.56.20", 8 ]
+    ],
+  },
 }
-   
-
-
 
 Vagrant.configure("2") do |config|
-    MACHINES.each do |boxname, boxconfig|
-        config.vm.define boxname do |box|
-            box.vm.box = boxconfig[:box_name]
-            box.vm.host_name = boxname.to_s
-            box.vm.network "private_network", ip: boxconfig[:ip_addr]
-            box.vm.provider :virtualbox do |vm|
-              needsController = false
-              boxconfig[:disk].each do |dname, dconf|
-              unless File.exist?(dconf[:dfile])
-                vm.customize ['createhd', '--filename', dconf[:dfile], '--variant', 'Fixed', '--size', dconf[:size]]
-                needsController =  true
-              end
-            end
-            if needsController == true
-              vm.customize ["storagectl", :id, "--name", "SATA", "--add", "sata" ]
-              boxconfig[:disks].each do |dname, dconf|
-                vm.customize ['storageattach', :id,  '--storagectl', 'SATA', '--port', dconf[:port], '--device', 0, '--type', 'hdd', '--medium', dconf[:dfile]]
-              end
-            end
-               vm.memory = boxconfig[:memory]
-               vm.cpus = boxconfig[:cpus]
-            end
-            config.vm.provision "shell", inline: <<-SHELL
-                sudo su
-                sgdisk -o /dev/sda
-                sgdisk -n 0::+2000M /dev/sda
-                sgdisk -n 0::0 /dev/sda
-            SHELL
-         end
+  MACHINES.each do |boxname, boxconfig|
+    config.vm.define boxname do |box|
+      box.vm.provider "virtualbox" do |v|
+        v.memory = boxconfig[:memory] || 1500
+        v.cpus = boxconfig[:cpus] || 2
+      end
+      box.vm.box = BOX_NAME
+      box.vm.host_name = boxname.to_s
+
+      boxconfig[:networks].each do |ipconf|
+        box.vm.network("private_network", ip: ipconf[0], adapter: ipconf[1], netmask: ipconf[2], virtualbox__intnet: ipconf[3]) 
+        # config.vm.network "forwarded_port", guest: 22, host: 2202, auto_correct: true
+      end
+      
+      box.vm.provision "shell", inline: <<-SHELL
+        mkdir -p ~root/.ssh
+        cp ~vagrant/.ssh/auth* ~root/.ssh
+        sudo sed -i 's/\#PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+        systemctl restart sshd
+      SHELL
+    
     end
-end           
+  end
+end
+

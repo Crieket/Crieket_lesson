@@ -1,0 +1,67 @@
+---
+# - name: Configure Backup Server
+#   hosts: backup_servers
+#   become: yes
+#   vars_files:
+#   - /home/kas/Рабочий стол/Crieket_lesson/Backups/all_vars.yml
+#   tasks:
+  - name: Install packages
+    apt:
+      name:
+        - borgbackup
+      state: present
+      update_cache: yes
+
+  - name: Create /var/backup directory
+    file:
+      path: /var/backup
+      state: directory
+      mode: '0700'
+      owner: borg
+      group: borg
+
+  - name: Create loop device image (2GB)
+    command: dd if=/dev/zero of=/var/backup.img bs=1M count=2048
+    args:
+      creates: /var/backup.img
+
+  - name: Format /var/backup.img as ext4
+    filesystem:
+      fstype: ext4
+      dev: /var/backup.img
+
+  - name: Mount /var/backup via loop
+    mount:
+      path: /var/backup
+      src: /var/backup.img
+      fstype: ext4
+      opts: loop
+      state: mounted
+  
+  - name: Fix ownership of /var/backup after mount
+    file:
+      path: /var/backup
+      owner: borg
+      group: borg
+      mode: '0700'
+
+  - name: Initialize Borg repository (with password)
+    command: /bin/sh -c "echo '{{ borg_passphrase }}' | borg init --encryption=repokey /var/backup/repo"
+    args:
+      creates: /var/backup/repo/config
+    environment:
+      BORG_PASSPHRASE: "{{ borg_passphrase }}"
+
+  - name: Create backup user (optional, but good practice)
+    user:
+      name: borg
+      system: yes
+      shell: /bin/bash
+      home: /var/backup
+
+  - name: Set ownership of repo
+    file:
+      path: /var/backup/repo
+      owner: borg
+      group: borg
+      recurse: yes
