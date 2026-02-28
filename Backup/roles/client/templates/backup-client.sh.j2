@@ -1,0 +1,27 @@
+#!/bin/bash
+set -e
+
+REPO="borg@192.168.56.10:/var/backup/repo"
+BACKUP_NAME="etc-$(date +%Y-%m-%d_%H-%M)"
+export BORG_PASSPHRASE="kas"
+
+# Указываем явный путь к SSH-ключу
+export BORG_RSH="ssh -i /root/.ssh/id_borg -o IdentitiesOnly=yes -o StrictHostKeyChecking=no"
+
+borg create \
+  --verbose \
+  --filter AME \
+  --list \
+  --stats \
+  --compression lz4 \
+  "$REPO::$BACKUP_NAME" \
+  /etc
+
+borg prune \
+  --list \
+  --prefix "etc-" \
+  --keep-daily=90 \
+  --keep-monthly=12 \
+  "$REPO"
+
+logger -t borg-backup "Backup $BACKUP_NAME completed."

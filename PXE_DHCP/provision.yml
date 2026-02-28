@@ -1,0 +1,9 @@
+---
+- name: PXE manual install
+  hosts: pxeserver
+  gather_facts: yes
+  become: yes
+  roles:
+    - pxe_m
+  tags: pxe_m
+

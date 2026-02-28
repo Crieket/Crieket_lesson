@@ -1,0 +1,71 @@
+---
+- name: Install borgbackup
+  apt:
+    name: borgbackup
+    state: present
+    update_cache: yes
+
+- name: Ensure .ssh dir exists
+  file:
+    path: /root/.ssh
+    state: directory
+    mode: '0700'
+    owner: root
+    group: root
+    
+- name: Create SSH key for borg (no passphrase)
+  openssh_keypair:
+    path: /root/.ssh/id_borg
+    type: ed25519
+    comment: "borg@client"
+    state: present
+    regenerate: never
+
+- name: Read public key from client
+  slurp:
+    src: /root/.ssh/id_borg.pub
+  register: borg_pubkey
+  delegate_to: client
+
+- name: Create SSH key for borg (on client, as root)
+  openssh_keypair:
+    path: /root/.ssh/id_borg
+    type: ed25519
+    comment: "borg@client"
+    state: present
+    regenerate: never
+  become: yes
+
+- name: Read public key from client
+  slurp:
+    src: /root/.ssh/id_borg.pub
+  register: borg_pubkey
+  become: yes
+
+- name: Add Borg client public key to backup server with restrictions
+  authorized_key:
+    user: borg
+    state: present
+    key: "{{ borg_pubkey.content | b64decode }}"
+    key_options: 'command="borg serve --restrict-to-path /var/backup/repo",restrict'
+  delegate_to: backup
+  become: yes
+
+- name: Create known_hosts entry for backup_server
+  lineinfile:
+    path: /root/.ssh/known_hosts
+    create: yes
+    line: "{{ hostvars['backup]['ansible_host'] }} ssh-ed25519 {{ hostvars['backup']['ansible_ssh_host_key_ed25519'] }}"
+  when: hostvars['backup']['ansible_ssh_host_key_ed25519'] is defined
+
+- name: Deploy backup script
+  template:
+    src: backup-client.sh.j2
+    dest: /usr/local/bin/backup.sh
+    mode: '0700'
+
+- name: Add cron job (every 5 minutes)
+  cron:
+    name: "Borg backup of /etc"
+    minute: "*/5"
+    job: "/usr/local/bin/backup.sh >> /dev/null 2>&1"

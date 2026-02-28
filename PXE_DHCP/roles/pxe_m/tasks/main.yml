@@ -1,0 +1,119 @@
+---
+# tasks file for prepare
+
+# Disable firewall
+  - name: Check if UFW is installed
+    command: dpkg-query -W ufw
+    register: ufw_check
+    failed_when: ufw_check.rc > 1
+    changed_when: false
+
+  - name: Disable UFW if installed
+    command: ufw disable
+    when: ufw_check.rc == 0
+
+  - name: Stop and disable UFW service
+    systemd:
+      name: ufw
+      state: stopped
+      enabled: no
+    when: ufw_check.rc == 0
+
+  #Установка базового софта
+  - name: base soft
+    become: true
+    apt:
+      name:
+       - chrony
+       - sshpass
+       - dnsmasq
+       - apache2
+       - curl
+       - mc         
+      state: present
+      update_cache: yes
+
+  #Установка временной зоны Европа/Москва
+  - name: Set up timezone
+    timezone:
+      name: "Europe/Moscow"
+
+  #Запуск службы Chrony, добавление её в автозагрузку
+  - name: enable chrony
+    service:
+      name: chronyd
+      state: restarted
+      enabled: true
+      
+  #Копирование файла /etc/hosts c правами root:root 0644
+  - name: copy /etc/dnsmasq.d/pxe.conf
+    template:
+      src: pxe.conf.j2
+      dest: /etc/dnsmasq.d/pxe.conf
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: create a directory /srv/tftp if it does not exist
+    file:
+      path   : /srv/tftp
+      state  : directory
+      mode   : '0755'
+  
+  - name: Download Plucky Netboot archive
+    get_url:
+      url: "https://old-releases.ubuntu.com/releases/24.04.2/ubuntu-24.04-netboot-amd64.tar.gz"
+      dest: "/tmp/ubuntu-24.04-netboot-amd64.tar.gz"
+      mode: '0644'
+
+  - name: Extract Plucky Netboot archive to /srv/tftp
+    unarchive:
+      src: "/tmp/ubuntu-24.04-netboot-amd64.tar.gz"
+      dest: "/srv/tftp"
+      remote_src: yes
+
+  - name: Restart dnsmasq service
+    ansible.builtin.systemd:
+      name: dnsmasq
+      state: restarted
+      enabled: yes
+
+  - name: create a directory /srv/images if it does not exist
+    file:
+      path: /srv/images
+      state: directory
+      mode: '0755'
+
+  - name: Download Ubuntu Live Server ISO
+    get_url:
+      url: "https://old-releases.ubuntu.com/releases/24.04.2/ubuntu-24.04.2-live-server-amd64.iso"
+      dest: "/srv/images/ubuntu-24.04.2-live-server-amd64.iso"
+      mode: '0644'
+
+  - name: copy /etc/apache2/sites-available/ks-server.conf
+    template:
+      src: ks-server.conf.j2
+      dest: /etc/apache2/sites-available/ks-server.conf
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: Enable ks-server Apache site
+    ansible.builtin.command:
+      cmd: a2ensite ks-server.conf
+    changed_when: false
+
+  - name: copy /srv/tftp/amd64/pxelinux.cfg/default
+    template:
+      src: default.j2
+      dest: /srv/tftp/amd64/pxelinux.cfg/default
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: Restart apache2 service
+    ansible.builtin.systemd:
+      name: apache2
+      state: restarted
+      enabled: yes
+

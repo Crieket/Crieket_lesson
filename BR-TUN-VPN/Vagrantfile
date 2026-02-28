@@ -5,8 +5,8 @@ server.vm.hostname = "server.loc"
   	server.vm.network "private_network", ip: "192.168.56.10" 
 end 
 
-config.vm.define "client" do |client| 
-client.vm.hostname = "client.loc" 
-client.vm.network "private_network", ip: "192.168.56.20" 
-end 
+# config.vm.define "client" do |client| 
+# client.vm.hostname = "client.loc" 
+# client.vm.network "private_network", ip: "192.168.56.20" 
+# end 
 end
