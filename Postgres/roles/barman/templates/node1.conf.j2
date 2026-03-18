@@ -1,0 +1,21 @@
+[node1]
+#Описание задания
+description = "PostgreSQL Master node1"
+#Команда подключения к хосту node1
+ssh_command = ssh postgres@192.168.56.10
+#Команда для подключения к postgres-серверу
+conninfo = host=192.168.56.10 user=barman port=5432 dbname=postgres
+retention_policy_mode = auto
+retention_policy = RECOVERY WINDOW OF 3 DAYS
+wal_retention_policy = main
+streaming_archiver=on
+#Указание префикса, который будет использоваться как $PATH на хосте {{ barman_master_node }}
+path_prefix = /usr/pgsql-14/bin/
+#настройки слота
+create_slot = auto
+slot_name = barman
+#Команда для потоковой передачи от postgres-сервера
+streaming_conninfo = host=192.168.56.10 user=barman
+#Тип выполняемого бекапа
+backup_method = postgres
+archiver = off

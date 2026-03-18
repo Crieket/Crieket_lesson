@@ -1,0 +1,26 @@
+  #Копируем конфигурационный файл postgresql.conf
+- name: copy postgresql.conf
+  template:
+    src: postgresql.conf.j2
+    dest:  /etc/postgresql/14/main/postgresql.conf
+    owner: postgres
+    group: postgres
+    mode: '0600'  
+  when: inventory_hostname == "node2"
+
+  #Копируем конфигурационный файл pg_hba.conf
+- name: copy pg_hba.conf
+  template:
+    src: pg_hba.conf.j2
+    dest:  /etc/postgresql/14/main/pg_hba.conf
+    owner: postgres
+    group: postgres
+    mode: '0600'
+  when: inventory_hostname == "node2"
+   
+  #Запускаем службу postgresql на хосте node2
+- name: start postgresql-server on node2
+  service: 
+    name: postgresql
+    state: started
+  when: inventory_hostname == "node2"

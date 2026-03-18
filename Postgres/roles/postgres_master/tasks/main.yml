@@ -1,0 +1,82 @@
+---
+# - name: postgres
+#   hosts: all
+#   become: true
+#   become_method: sudo 
+#   vars_files:
+#   - /home/kas/Crieket_lesson/Progres/roles/all_var.yml
+
+- name: install base tools
+  apt:
+    name:
+    - python3-pexpect
+    - python3-psycopg2
+    state: present
+    update_cache: no
+
+#CREATE USER replicator WITH REPLICATION Encrypted PASSWORD 'OTUS2026!';
+- name: Create replicator user
+  become: true 
+  become_user: postgres
+  become_method: sudo 
+  postgresql_user:
+    name: replicator
+    password: '{{ replicator_password }}'
+    role_attr_flags: REPLICATION 
+  ignore_errors: true
+  when: inventory_hostname == "node1"
+
+#Останавливаем postgresql на хосте node2
+- name: stop postgresql-server on node2
+  service: 
+    name: postgresql
+    state: stopped
+  delegate_to: node1
+  when: inventory_hostname == "node2"
+
+  #Копируем конфигурационный файл postgresql.conf
+- name: copy postgresql.conf
+  template:
+    src: postgresql.conf.j2
+    dest: /etc/postgresql/14/main/postgresql.conf
+    owner: postgres
+    group: postgres
+    mode: '0600'
+  when: inventory_hostname == "node1"
+  
+  #Копируем конфигурационный файл pg_hba.conf
+- name: copy pg_hba.conf
+  template:
+    src: pg_hba.conf.j2
+    dest: /etc/postgresql/14/main/pg_hba.conf
+    owner: postgres
+    group: postgres
+    mode: '0600'
+  when: inventory_hostname== "node1"
+   #Перезапускаем службу  postgresql
+- name: restart postgresql-server on node1
+  service: 
+    name: postgresql
+    state: restarted
+  when: inventory_hostname == "node1"
+
+  #Удаляем содержимое каталога /var/lib/postgresql/14/main/
+- name: Remove files from data catalog
+  file:
+    path: /var/lib/postgresql/14/main/
+    state: absent
+  delegate_to: node2
+  when: inventory_hostname == "node1"
+
+  #Копируем данные с node1 на node2
+- name: copy files from master to slave
+  become_user: postgres
+  expect:
+    command: 'pg_basebackup -h {{ master_ip }} -U  replicator -p 5432 -D /var/lib/postgresql/14/main/ -R -P'
+    responses: 
+      '.*Password*': "{{ replicator_password }}"
+  delegate_to: node2    
+  # when: inventory_hostname == "node1"
+
+
+

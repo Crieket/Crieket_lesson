@@ -1,0 +1,95 @@
+# =============================================================================
+# PostgreSQL 14 Configuration for Replication & Barman Backup
+# =============================================================================
+# Применимо для: node1 (Master), node2 (Replica), barman (Local)
+# =============================================================================
+
+#------------------------------------------------------------------------------
+# FILE LOCATIONS
+#------------------------------------------------------------------------------
+data_directory = '/var/lib/postgresql/14/main'
+hba_file = '/etc/postgresql/14/main/pg_hba.conf'
+ident_file = '/etc/postgresql/14/main/pg_ident.conf'
+external_pid_file = '/var/run/postgresql/14-main.pid'
+
+#------------------------------------------------------------------------------
+# CONNECTIONS AND AUTHENTICATION
+#------------------------------------------------------------------------------
+listen_addresses = '192.168.56.10'
+port = 5432
+max_connections = 100
+unix_socket_directories = '/var/run/postgresql'
+
+#------------------------------------------------------------------------------
+# MEMORY SETTINGS (Basic Tuning)
+#------------------------------------------------------------------------------
+shared_buffers = 256MB
+dynamic_shared_memory_type = posix
+work_mem = 4MB
+maintenance_work_mem = 64MB
+
+#------------------------------------------------------------------------------
+# WRITE AHEAD LOG (WAL)
+#------------------------------------------------------------------------------
+wal_level = replica
+fsync = on
+synchronous_commit = on
+wal_buffers = 16MB
+checkpoint_completion_target = 0.9
+default_statistics_target = 100
+
+#------------------------------------------------------------------------------
+# REPLICATION (Critical for Streaming & Barman)
+#------------------------------------------------------------------------------
+# max_wal_senders: Кол-во одновременных подключений репликации.
+# Формула: (Слейвы) + (Barman backup) + (Barman receive-wal) + (Запас)
+# Рекомендуется: минимум 10
+max_wal_senders = 10
+
+# max_replication_slots: Должен быть >= max_wal_senders
+max_replication_slots = 10
+
+# hot_standby: Разрешает чтение на реплике (для node2)
+hot_standby = on
+hot_standby_feedback = on
+
+#------------------------------------------------------------------------------
+# ARCHIVING (Critical for Barman WAL Backup)
+#------------------------------------------------------------------------------
+# archive_mode: Включает архивирование
+archive_mode = on
+
+# archive_command: Команда для отправки WAL в Barman
+# ВАЖНО: Указывайте полный путь к утилите!
+# %p = полный путь к файлу, %f = имя файла
+archive_command = '/usr/bin/barman-wal-archive localhost node1 %p'
+
+# archive_timeout: Принудительная архивация WAL, если нет переключения (сек)
+# Помогает уменьшить RPO в системах с низкой нагрузкой
+archive_timeout = 300
+
+#------------------------------------------------------------------------------
+# LOGGING
+#------------------------------------------------------------------------------
+log_destination = 'stderr'
+logging_collector = on
+log_directory = '/var/log/postgresql'
+log_filename = 'postgresql-14-main.log'
+log_rotation_age = 1d
+log_rotation_size = 10MB
+log_line_prefix = '%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h '
+log_checkpoints = on
+log_connections = on
+log_disconnections = on
+log_lock_waits = on
+log_temp_files = 0
+log_timezone = 'UTC'
+
+#------------------------------------------------------------------------------
+# AUTOVACUUM
+#------------------------------------------------------------------------------
+autovacuum = on
+autovacuum_max_workers = 3
+autovacuum_naptime = 1min
+autovacuum_vacuum_threshold = 50
+autovacuum_analyze_threshold = 50

@@ -1,0 +1,23 @@
+- name: TTL 
+  shell: sysctl -w net.ipv4.ip_default_ttl 65 | cat /proc/sys/net/ipv4/ip_default_ttl
+  register: ttl_default
+
+- name: ttl output
+  debug:
+    var: ttl_default.stdout_lines
+    
+- name: install postgresql-server 
+  apt: 
+    name: 
+    - postgresql 
+    - postgresql-contrib
+    - barman-cli
+    state: present
+    update_cache: no
+
+  # Запускаем postgresql
+- name: enable and start service
+  service:
+    name: postgresql
+    state: started
+    enabled: true

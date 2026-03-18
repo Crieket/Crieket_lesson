@@ -1,0 +1,46 @@
+---
+- name: postgres
+  hosts: all
+  become: true
+  become_method: sudo 
+  vars_files:
+  - /home/kas/Crieket_lesson/Postgres/group_vars/all.yml
+  tasks:
+
+  roles:
+  - role: postgres_install
+
+
+- name: postgres_master
+  hosts: node1
+  become: true
+  become_method: sudo 
+  vars_files:
+  - /home/kas/Crieket_lesson/Postgres/group_vars/all.yml
+  tasks:
+
+  roles:
+  - role: postgres_master
+
+- name: postgres_replication
+  hosts: node2
+  become: true
+  become_method: sudo 
+  vars_files:
+  - /home/kas/Crieket_lesson/Postgres/group_vars/all.yml
+  tasks:
+
+  roles:
+  - role: postgres_replication
+
+  
+- name: barmen
+  hosts: barman
+  become: true
+  become_method: sudo 
+  vars_files:
+  - /home/kas/Crieket_lesson/Postgres/group_vars/all.yml
+  tasks:
+
+  roles:
+  - role: barman

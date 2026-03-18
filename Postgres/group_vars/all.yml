@@ -1,0 +1,16 @@
+---
+replicator_password: 'OTUS2026!'
+master_ip: '192.168.56.10'
+slave_ip: '192.168.56.20'
+
+
+master_user: 'postgres'
+barman_ip: '192.168.56.30'
+barman_user: 'barman'
+barman_user_password: 'OTUS2026!'
+
+barman_master_node: 'node1'   
+barman_node_name: 'barman'   
+
+master_node: "{{ true if inventory_hostname == barman_master_node else false }}"
+barman_node: "{{ true if inventory_hostname == barman_node_name else false }}"
